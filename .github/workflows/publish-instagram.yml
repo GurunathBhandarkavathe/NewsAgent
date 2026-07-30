@@ -57,7 +57,21 @@ jobs:
       - name: Install app
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .
+          python -m pip install --no-cache-dir --force-reinstall .
+
+      - name: Verify publish mode
+        run: |
+          echo "workflow_commit=$(git rev-parse --short HEAD)"
+          python - <<'PY'
+          from newsagent.config import load_config
+          import newsagent.publisher
+
+          config = load_config()
+          print(f"installed_publisher={newsagent.publisher.__file__}")
+          print(f"post_format={config.post_format}")
+          if config.post_format != "separate_posts":
+              raise SystemExit("POST_FORMAT must be separate_posts for this workflow")
+          PY
 
       - name: Create one draft
         id: draft
