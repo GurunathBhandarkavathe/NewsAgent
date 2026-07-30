@@ -1,0 +1,91 @@
+name: Publish Instagram Carousel
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 3 hours on IST boundaries: 06:00, 09:00, 12:00, etc.
+    - cron: "30 0,3,6,9,12,15,18,21 * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: samachar-bharat-instagram
+  cancel-in-progress: false
+
+env:
+  BRAND_NAME: Samachar Bharat
+  BRAND_HANDLE: "@smachar.bh"
+  BRAND_TAGLINE: Bharat in 5 slides. Every 3 hours.
+  NEWSAGENT_DATA_DIR: data
+  NEWSAGENT_ASSETS_DIR: public-assets
+  NEWSAGENT_SESSION_PATH: data/session-store.json
+  IMAGE_POLICY: branded_cards
+  REQUIRE_REAL_IMAGES: "false"
+  META_GRAPH_VERSION: v26.0
+  META_API_HOST: ${{ secrets.META_API_HOST }}
+  INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
+  META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Restore JSON session store
+        uses: actions/cache@v4
+        with:
+          path: data/session-store.json
+          key: newsagent-session-${{ github.run_id }}
+          restore-keys: |
+            newsagent-session-
+
+      - name: Install app
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Create one draft
+        id: draft
+        run: |
+          newsagent run-once --draft-id-file data/latest-draft-id.txt
+          echo "draft_id=$(cat data/latest-draft-id.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Configure GitHub Pages
+        if: steps.draft.outputs.draft_id != ''
+        uses: actions/configure-pages@v5
+
+      - name: Upload generated assets to Pages
+        if: steps.draft.outputs.draft_id != ''
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public-assets
+
+      - name: Deploy generated assets to Pages
+        if: steps.draft.outputs.draft_id != ''
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Publish exact generated draft
+        if: steps.draft.outputs.draft_id != ''
+        run: |
+          newsagent publish-latest \
+            --draft-id-file data/latest-draft-id.txt \
+            --public-asset-base-url "${{ steps.deployment.outputs.page_url }}"
+
+      - name: No fresh draft
+        if: steps.draft.outputs.draft_id == ''
+        run: echo "No fresh draft was generated, so nothing was published."

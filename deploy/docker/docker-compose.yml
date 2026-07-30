@@ -1,0 +1,13 @@
+services:
+  samachar-bharat-newsagent:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+    env_file:
+      - ../../.env
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ../../data:/app/data
+      - ../../assets:/app/assets
+    restart: unless-stopped

@@ -1,0 +1,17 @@
+[Unit]
+Description=Samachar Bharat NewsAgent production pipeline
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/samachar-bharat-newsagent
+EnvironmentFile=/opt/samachar-bharat-newsagent/.env
+Environment=PYTHONPATH=src
+ExecStart=/opt/samachar-bharat-newsagent/.venv/bin/python -m newsagent.cli production
+Restart=always
+RestartSec=20
+User=samachar
+
+[Install]
+WantedBy=multi-user.target
