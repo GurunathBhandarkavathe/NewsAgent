@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # Diagnostic schedule. This does not publish anything.
-    - cron: "*/10 * * * *"
+    - cron: "3,13,23,33,43,53 * * * *"
 
 permissions:
   contents: read
