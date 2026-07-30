@@ -4,8 +4,9 @@ on:
   workflow_dispatch:
   schedule:
     # TEMP TEST MODE: GitHub Actions' shortest supported schedule is every 5 minutes.
+    # Offset from :00/:05/:10 to reduce GitHub scheduler delay/drop risk.
     # Revert to: 30 0,3,6,9,12,15,18,21 * * *
-    - cron: "*/5 * * * *"
+    - cron: "2/5 * * * *"
 
 permissions:
   contents: read
