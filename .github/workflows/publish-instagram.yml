@@ -6,9 +6,9 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    # TEMP TEST MODE: single-minute hourly cron for scheduler diagnostics.
+    # TEMP TEST MODE: run every 5 minutes for scheduler diagnostics.
     # Revert to: 30 0,3,6,9,12,15,18,21 * * *
-    - cron: "7 * * * *"
+    - cron: "*/5 * * * *"
 
 permissions:
   contents: read

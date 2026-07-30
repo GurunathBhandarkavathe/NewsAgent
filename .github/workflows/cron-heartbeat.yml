@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
   schedule:
     # Diagnostic schedule. This does not publish anything.
-    - cron: "3 * * * *"
+    # Use a short cadence so GitHub scheduler activity is easy to confirm.
+    - cron: "*/5 * * * *"
 
 permissions:
   contents: read
