@@ -1,10 +1,11 @@
 # Samachar Bharat NewsAgent
 
-Samachar Bharat NewsAgent is a local-first Python app that drafts Instagram carousel posts from India-focused trending news. It gathers stories, scores and deduplicates them, creates 1080x1350 carousel slides, writes a detailed Instagram description with context and source links, and waits for human approval before posting.
+Samachar Bharat NewsAgent is a local-first Python app that drafts Instagram posts from India-focused trending news. It gathers stories, scores and deduplicates them, creates 1080x1350 slides, writes detailed Instagram descriptions with context and source links, and waits for human approval before posting.
 
 ## What It Builds
 
-- One 4-5 slide Instagram carousel draft every 3 hours in IST.
+- One 4-5 story draft every 3 hours in IST.
+- Default publishing mode is one separate Instagram feed post per story, so each story gets its own detailed caption.
 - Categories: politics, films, sports, current affairs, and international.
 - Sources: direct publisher RSS feeds, Google Trends India RSS, and GDELT DOC API.
 - Default image policy is branded story cards only, so no publisher/news-channel
@@ -15,7 +16,7 @@ Samachar Bharat NewsAgent is a local-first Python app that drafts Instagram caro
 - Manual export fallback when Meta credentials or public asset URLs are missing.
 - Samachar Bharat branding on dashboard, descriptions, and generated slides.
 - Slide text uses clear news-brief sentences instead of headline-only text.
-- Instagram descriptions include detailed per-story blocks with context, courtesy, and a full-report link.
+- Instagram descriptions include detailed context, courtesy, and a full-report link for each post.
 
 ## Setup
 
@@ -114,7 +115,7 @@ are stored in `NEWSAGENT_SESSION_PATH`, which defaults to
 The repository includes `.github/workflows/publish-instagram.yml` for an
 optional owner-only hosted run. It creates one draft, uploads the generated
 slides to GitHub Pages so Meta can fetch public HTTPS images, then publishes
-that exact draft id through Meta.
+that exact draft id through Meta as separate feed posts by default.
 
 Add these repository secrets before enabling the workflow:
 
@@ -143,6 +144,10 @@ Approved drafts publish through Meta's Instagram Content Publishing flow when th
 - `META_GRAPH_VERSION`, default `v26.0`
 
 `PUBLIC_ASSET_BASE_URL` must be an HTTPS URL that publicly serves the local `assets/` directory. If any publishing requirement is missing, approval exports a manual package instead of failing.
+
+The default `POST_FORMAT=separate_posts` publishes each selected story as its
+own feed post with a story-specific caption. Set `POST_FORMAT=carousel` only if
+you want the older one-carousel-per-cycle behavior.
 
 Useful references:
 
@@ -181,5 +186,5 @@ pytest
 The automated suite covers mocked draft generation, category balancing,
 deduplication, JSON session storage, description references, image dimensions,
 dashboard approval actions, token protection, manual export fallback, Meta
-carousel request sequencing, RSS parsing, Google Trends categorization, source
-adapter failure logs, and config defaults.
+separate-post request sequencing, optional carousel fallback, RSS parsing,
+Google Trends categorization, source adapter failure logs, and config defaults.

@@ -65,6 +65,11 @@ def production_checks(config: Config) -> list[ProductionCheck]:
             f"{source_count} enabled adapters",
         ),
         ProductionCheck(
+            "Post format",
+            "ok",
+            "5 separate feed posts per cycle" if config.post_format == "separate_posts" else "single carousel per cycle",
+        ),
+        ProductionCheck(
             "Meta account",
             "ok" if config.instagram_business_account_id else "warn",
             "configured" if config.instagram_business_account_id else "manual export until INSTAGRAM_BUSINESS_ACCOUNT_ID is set",

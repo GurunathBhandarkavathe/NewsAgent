@@ -58,6 +58,35 @@ def build_caption(
     return fit_caption_to_instagram(compact, max_chars=max_chars)
 
 
+def build_story_post_caption(
+    story: DraftStory,
+    index: int,
+    total: int,
+    *,
+    brand_name: str = "Samachar Bharat",
+    brand_handle: str = "@smachar.bh",
+    brand_tagline: str = "Bharat in 5 slides. Every 3 hours.",
+    max_chars: int = PUBLISH_CAPTION_MAX_CHARS,
+) -> str:
+    label = story.category.replace("_", " ").title()
+    title = truncate_words(story.title, max_words=24, max_chars=180)
+    detail = complete_sentence(story_context(story, max_words=115, max_chars=900))
+    source = truncate_words(story.source.rstrip("."), max_words=10, max_chars=90)
+    host = source_from_url(story.url)
+    lines = [
+        f"{brand_name} update {index}/{total}: {label}",
+        title,
+        "",
+        f"Details: {detail}",
+        "",
+        f"Source/courtesy: {source}",
+        f"Full report: {host}: {story.url}",
+        f"Follow {brand_handle} for {brand_tagline}",
+        f"{brand_hashtag(brand_name)} #BharatNews #NewsUpdate",
+    ]
+    return fit_caption_to_instagram("\n".join(lines), max_chars=max_chars)
+
+
 def compose_caption(
     stories: list[DraftStory],
     variant_index: int,

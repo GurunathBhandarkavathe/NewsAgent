@@ -6,7 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 from newsagent.briefs import description_detail, slide_brief
-from newsagent.caption import PUBLISH_CAPTION_MAX_CHARS, build_caption
+from newsagent.caption import PUBLISH_CAPTION_MAX_CHARS, build_caption, build_story_post_caption
 from newsagent.db import Database
 from newsagent.models import DraftStory, NewsItem
 from newsagent.pipeline import regenerate_draft_with_fresh_images, run_cycle
@@ -81,6 +81,33 @@ def test_caption_stays_under_instagram_publish_limit_with_long_news_details() ->
     assert len(caption) <= PUBLISH_CAPTION_MAX_CHARS
     assert "Source/courtesy:" in caption
     assert "#SamacharBharat" in caption
+
+
+def test_separate_post_caption_has_detailed_single_story_description() -> None:
+    story = DraftStory(
+        key="story",
+        title="India parliament debates a new digital governance bill",
+        url="https://example.com/politics/digital-governance-bill",
+        source="Example News",
+        category="politics",
+        published_at=None,
+        summary=(
+            "Lawmakers discussed the bill's impact on digital services, citizen safeguards, "
+            "state coordination, and the next steps before formal voting."
+        ),
+        image_url="",
+        source_count=1,
+        score=1.0,
+    )
+
+    caption = build_story_post_caption(story, 1, 5)
+
+    assert caption.startswith("Samachar Bharat update 1/5: Politics")
+    assert "Details:" in caption
+    assert "citizen safeguards" in caption
+    assert "Source/courtesy: Example News" in caption
+    assert "Full report: example.com: https://example.com/politics/digital-governance-bill" in caption
+    assert len(caption) <= PUBLISH_CAPTION_MAX_CHARS
 
 
 def test_story_briefs_use_summary_context_instead_of_headline_only(tmp_path: Path) -> None:

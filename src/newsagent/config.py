@@ -113,6 +113,7 @@ class Config:
     dedupe_hours: int = field(default_factory=lambda: _int("DEDUPE_HOURS", 48))
     draft_min_items: int = field(default_factory=lambda: _int("DRAFT_MIN_ITEMS", 4))
     draft_max_items: int = field(default_factory=lambda: _int("DRAFT_MAX_ITEMS", 5))
+    post_format: str = field(default_factory=lambda: os.getenv("POST_FORMAT", "separate_posts"))
     image_policy: str = field(default_factory=lambda: os.getenv("IMAGE_POLICY", "branded_cards"))
     require_real_images: bool = field(default_factory=lambda: _bool("REQUIRE_REAL_IMAGES", False))
     image_enrichment_limit: int = field(default_factory=lambda: _int("IMAGE_ENRICHMENT_LIMIT", 80))
@@ -145,6 +146,9 @@ class Config:
         self.meta_access_token = self.meta_access_token.strip()
         self.public_asset_base_url = self.public_asset_base_url.strip()
         self.public_asset_token = self.public_asset_token.strip()
+        self.post_format = self.post_format.strip().lower() or "separate_posts"
+        if self.post_format not in {"separate_posts", "carousel"}:
+            self.post_format = "separate_posts"
         self.image_policy = self.image_policy.strip().lower() or "branded_cards"
         if self.image_policy not in {"branded_cards", "article_images"}:
             self.image_policy = "branded_cards"

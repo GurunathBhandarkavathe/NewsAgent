@@ -9,7 +9,7 @@ from urllib.parse import quote, urljoin
 
 import requests
 
-from .caption import PUBLISH_CAPTION_MAX_CHARS, fit_caption_to_instagram
+from .caption import PUBLISH_CAPTION_MAX_CHARS, build_story_post_caption, fit_caption_to_instagram
 from .config import Config
 from .meta_api import meta_response_error_detail, redact_sensitive_meta_text
 from .models import Draft
@@ -40,6 +40,49 @@ class Publisher:
         return self._publish_to_meta(draft)
 
     def _publish_to_meta(self, draft: Draft) -> PublishResult:
+        if self.config.post_format == "carousel":
+            return self._publish_carousel_to_meta(draft)
+        return self._publish_separate_posts_to_meta(draft)
+
+    def _publish_separate_posts_to_meta(self, draft: Draft) -> PublishResult:
+        base = self.config.meta_api_base_url
+        posts: list[dict] = []
+        for index, story in enumerate(draft.stories, start=1):
+            image_url = self._public_url_for_slide(story.slide_path)
+            caption = build_story_post_caption(
+                story,
+                index,
+                len(draft.stories),
+                brand_name=self.config.brand_name,
+                brand_handle=self.config.brand_handle,
+                brand_tagline=self.config.brand_tagline,
+            )
+            container = self._post(
+                f"{base}/{self.config.instagram_business_account_id}/media",
+                {
+                    "image_url": image_url,
+                    "caption": caption,
+                    "access_token": self.config.meta_access_token,
+                },
+            )
+            creation_id = container["id"]
+            publish_response = self._publish_creation_id(base, creation_id)
+            posts.append(
+                {
+                    "story_key": story.key,
+                    "creation_id": creation_id,
+                    "caption_length": len(caption),
+                    "publish": publish_response,
+                }
+            )
+
+        return PublishResult(
+            status="published",
+            message=f"Published {len(posts)} separate Instagram posts through {self.config.meta_auth_flow_label}.",
+            response={"post_format": "separate_posts", "posts": posts},
+        )
+
+    def _publish_carousel_to_meta(self, draft: Draft) -> PublishResult:
         base = self.config.meta_api_base_url
         children: list[str] = []
         for story in draft.stories:
@@ -65,24 +108,31 @@ class Publisher:
         )
         creation_id = container["id"]
 
-        publish_response = None
-        for attempt in range(4):
-            try:
-                publish_response = self._post(
-                    f"{base}/{self.config.instagram_business_account_id}/media_publish",
-                    {"creation_id": creation_id, "access_token": self.config.meta_access_token},
-                )
-                break
-            except requests.HTTPError:
-                if attempt == 3:
-                    raise
-                time.sleep(3)
+        publish_response = self._publish_creation_id(base, creation_id)
 
         return PublishResult(
             status="published",
             message=f"Published to Instagram through {self.config.meta_auth_flow_label}.",
-            response={"container_id": creation_id, "children": children, "publish": publish_response},
+            response={
+                "post_format": "carousel",
+                "container_id": creation_id,
+                "children": children,
+                "publish": publish_response,
+            },
         )
+
+    def _publish_creation_id(self, base: str, creation_id: str) -> dict:
+        for attempt in range(4):
+            try:
+                return self._post(
+                    f"{base}/{self.config.instagram_business_account_id}/media_publish",
+                    {"creation_id": creation_id, "access_token": self.config.meta_access_token},
+                )
+            except requests.HTTPError:
+                if attempt == 3:
+                    raise
+                time.sleep(3)
+        raise RuntimeError("unreachable publish retry state")
 
     def _public_url_for_slide(self, slide_path: str) -> str:
         relative = ensure_relative_to(Path(slide_path), self.config.assets_dir)
@@ -112,6 +162,18 @@ def export_manual_package(draft: Draft, config: Config) -> Path:
                 shutil.copy2(source, export_dir / source.name)
 
     (export_dir / "caption.txt").write_text(draft.caption, encoding="utf-8")
+    for index, story in enumerate(draft.stories, start=1):
+        (export_dir / f"caption-{index:02d}.txt").write_text(
+            build_story_post_caption(
+                story,
+                index,
+                len(draft.stories),
+                brand_name=config.brand_name,
+                brand_handle=config.brand_handle,
+                brand_tagline=config.brand_tagline,
+            ),
+            encoding="utf-8",
+        )
     sources = [
         {
             "title": story.title,
@@ -125,7 +187,8 @@ def export_manual_package(draft: Draft, config: Config) -> Path:
     (export_dir / "sources.json").write_text(json.dumps(sources, indent=2), encoding="utf-8")
     (export_dir / "README.txt").write_text(
         f"Manual Instagram package generated for {config.brand_name} after approval.\n"
-        "Upload the slides in filename order as one carousel and paste caption.txt.\n"
+        "Default mode: upload each slide as a separate feed post and paste the matching caption-01.txt, caption-02.txt, etc.\n"
+        "If POST_FORMAT=carousel, upload the slides in filename order as one carousel and paste caption.txt.\n"
         "Review image reuse rights before publishing.\n",
         encoding="utf-8",
     )
