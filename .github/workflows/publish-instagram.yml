@@ -3,8 +3,9 @@ name: Publish Instagram Posts
 on:
   workflow_dispatch:
   schedule:
-    # Every 3 hours on IST boundaries: 06:00, 09:00, 12:00, etc.
-    - cron: "30 0,3,6,9,12,15,18,21 * * *"
+    # TEMP TEST MODE: GitHub Actions' shortest supported schedule is every 5 minutes.
+    # Revert to: 30 0,3,6,9,12,15,18,21 * * *
+    - cron: "*/5 * * * *"
 
 permissions:
   contents: read
@@ -22,6 +23,10 @@ env:
   NEWSAGENT_DATA_DIR: data
   NEWSAGENT_ASSETS_DIR: public-assets
   NEWSAGENT_SESSION_PATH: data/session-store.json
+  # TEMP TEST MODE: publish one story per run so scheduled testing does not flood the page.
+  # Revert to DRAFT_MIN_ITEMS=4 and DRAFT_MAX_ITEMS=5 after testing.
+  DRAFT_MIN_ITEMS: "1"
+  DRAFT_MAX_ITEMS: "1"
   POST_FORMAT: separate_posts
   ARTICLE_DETAIL_ENRICHMENT: "true"
   IMAGE_POLICY: article_images
