@@ -1,6 +1,9 @@
 name: Publish Instagram Posts
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
   schedule:
     # TEMP TEST MODE: every 10 minutes, offset away from the top of the hour.
