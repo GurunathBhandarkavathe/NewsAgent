@@ -24,9 +24,7 @@ def test_draft_id_file_points_publish_to_exact_generated_draft(tmp_path: Path) -
 def test_github_workflow_uses_exact_draft_id_before_publish() -> None:
     workflow = Path(".github/workflows/publish-instagram.yml").read_text(encoding="utf-8")
 
-    assert 'draft_id_file="data/latest-draft-id-${i}.txt"' in workflow
-    assert 'newsagent run-once --draft-id-file "$draft_id_file"' in workflow
-    assert "data/draft-ids.txt" in workflow
+    assert "newsagent run-once --draft-id-file data/latest-draft-id.txt" in workflow
     assert "newsagent publish-latest" in workflow
-    assert '--draft-id "$draft_id"' in workflow
+    assert "--draft-id-file data/latest-draft-id.txt" in workflow
     assert "actions/deploy-pages" in workflow

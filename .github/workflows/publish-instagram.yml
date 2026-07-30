@@ -2,20 +2,11 @@ name: Publish Instagram Posts
 
 on:
   workflow_dispatch:
-    inputs:
-      burst_count:
-        description: "Manual test only: number of one-post drafts to publish in this run"
-        required: false
-        default: "1"
-      burst_delay_seconds:
-        description: "Manual test only: seconds to wait between draft generations"
-        required: false
-        default: "0"
   schedule:
     # TEMP TEST MODE: GitHub Actions' shortest supported schedule is every 5 minutes.
     # Offset from :00/:05/:10 to reduce GitHub scheduler delay/drop risk.
     # Revert to: 30 0,3,6,9,12,15,18,21 * * *
-    - cron: "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
+    - cron: "4,9,14,19,24,29,34,39,44,49,54,59 * * * *"
 
 permissions:
   contents: read
@@ -89,68 +80,34 @@ jobs:
               raise SystemExit("POST_FORMAT must be separate_posts for this workflow")
           PY
 
-      - name: Create draft batch
-        id: drafts
-        env:
-          REQUESTED_BURST_COUNT: ${{ github.event_name == 'workflow_dispatch' && inputs.burst_count || '1' }}
-          REQUESTED_BURST_DELAY_SECONDS: ${{ github.event_name == 'workflow_dispatch' && inputs.burst_delay_seconds || '0' }}
+      - name: Create one draft
+        id: draft
         run: |
-          count="$REQUESTED_BURST_COUNT"
-          delay="$REQUESTED_BURST_DELAY_SECONDS"
-
-          case "$count" in
-            ''|*[!0-9]*) count=1 ;;
-          esac
-          case "$delay" in
-            ''|*[!0-9]*) delay=0 ;;
-          esac
-
-          if [ "$count" -lt 1 ]; then count=1; fi
-          if [ "$count" -gt 5 ]; then count=5; fi
-          if [ "$delay" -gt 300 ]; then delay=300; fi
-
-          : > data/draft-ids.txt
-          for i in $(seq 1 "$count"); do
-            draft_id_file="data/latest-draft-id-${i}.txt"
-            newsagent run-once --draft-id-file "$draft_id_file"
-            draft_id="$(cat "$draft_id_file")"
-            if [ -n "$draft_id" ]; then
-              echo "$draft_id" >> data/draft-ids.txt
-            fi
-            if [ "$i" -lt "$count" ] && [ "$delay" -gt 0 ]; then
-              sleep "$delay"
-            fi
-          done
-
-          draft_count="$(wc -l < data/draft-ids.txt | tr -d ' ')"
-          echo "draft_count=$draft_count" >> "$GITHUB_OUTPUT"
+          newsagent run-once --draft-id-file data/latest-draft-id.txt
+          echo "draft_id=$(cat data/latest-draft-id.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Configure GitHub Pages
-        if: steps.drafts.outputs.draft_count != '0'
+        if: steps.draft.outputs.draft_id != ''
         uses: actions/configure-pages@v5
 
       - name: Upload generated assets to Pages
-        if: steps.drafts.outputs.draft_count != '0'
+        if: steps.draft.outputs.draft_id != ''
         uses: actions/upload-pages-artifact@v3
         with:
           path: public-assets
 
       - name: Deploy generated assets to Pages
-        if: steps.drafts.outputs.draft_count != '0'
+        if: steps.draft.outputs.draft_id != ''
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Publish exact generated drafts
-        if: steps.drafts.outputs.draft_count != '0'
+      - name: Publish exact generated draft
+        if: steps.draft.outputs.draft_id != ''
         run: |
-          while IFS= read -r draft_id; do
-            if [ -n "$draft_id" ]; then
-              newsagent publish-latest \
-                --draft-id "$draft_id" \
-                --public-asset-base-url "${{ steps.deployment.outputs.page_url }}"
-            fi
-          done < data/draft-ids.txt
+          newsagent publish-latest \
+            --draft-id-file data/latest-draft-id.txt \
+            --public-asset-base-url "${{ steps.deployment.outputs.page_url }}"
 
       - name: No fresh draft
-        if: steps.drafts.outputs.draft_count == '0'
+        if: steps.draft.outputs.draft_id == ''
         run: echo "No fresh draft was generated, so nothing was published."
