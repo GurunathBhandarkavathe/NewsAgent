@@ -72,6 +72,22 @@ def test_extract_article_image_uses_open_graph_metadata(monkeypatch) -> None:
     assert metadata["description"] == "This is a useful source-written context line for the article."
 
 
+def test_extract_article_image_rejects_logo_metadata(monkeypatch) -> None:
+    html = """
+    <html>
+      <head>
+        <meta property="og:image" content="/assets/site-logo.png">
+      </head>
+      <body><img src="/photos/real-news-photo.jpg" width="900" height="500"></body>
+    </html>
+    """
+    monkeypatch.setattr("newsagent.sources.requests.get", lambda *args, **kwargs: FakeHTTPResponse(html))
+
+    image_url = extract_article_image("https://news.example/story")
+
+    assert image_url == "https://news.example/photos/real-news-photo.jpg"
+
+
 def test_extract_article_metadata_collects_article_body_context(monkeypatch) -> None:
     html = """
     <html>

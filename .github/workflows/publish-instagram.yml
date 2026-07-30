@@ -24,8 +24,8 @@ env:
   NEWSAGENT_SESSION_PATH: data/session-store.json
   POST_FORMAT: separate_posts
   ARTICLE_DETAIL_ENRICHMENT: "true"
-  IMAGE_POLICY: branded_cards
-  REQUIRE_REAL_IMAGES: "false"
+  IMAGE_POLICY: article_images
+  REQUIRE_REAL_IMAGES: "true"
   META_GRAPH_VERSION: v26.0
   META_API_HOST: ${{ secrets.META_API_HOST }}
   INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}

@@ -56,3 +56,13 @@ def test_default_image_policy_is_branded_cards(tmp_path: Path) -> None:
 
     assert config.image_policy == "branded_cards"
     assert config.uses_article_images is False
+
+
+def test_production_env_example_uses_required_article_images() -> None:
+    content = Path(".env.example").read_text(encoding="utf-8")
+    workflow = Path(".github/workflows/publish-instagram.yml").read_text(encoding="utf-8")
+
+    assert "IMAGE_POLICY=article_images" in content
+    assert "REQUIRE_REAL_IMAGES=true" in content
+    assert "IMAGE_POLICY: article_images" in workflow
+    assert 'REQUIRE_REAL_IMAGES: "true"' in workflow

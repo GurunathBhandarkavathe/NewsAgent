@@ -8,8 +8,7 @@ Samachar Bharat NewsAgent is a local-first Python app that drafts Instagram post
 - Default publishing mode is one separate Instagram feed post per story, so each story gets its own detailed caption.
 - Categories: politics, films, sports, current affairs, and international.
 - Sources: direct publisher RSS feeds, Google Trends India RSS, and GDELT DOC API.
-- Default image policy is branded story cards only, so no publisher/news-channel
-  images are placed into slides.
+- Default production image policy uses real article images and requires every selected story to have a loadable image; if enough real images are not available, the cycle is skipped instead of posting fallback cards.
 - Local JSON session store with draft status, dedupe memory, and source logs.
 - Approval dashboard with approve, reject, hold, regenerate description, and regenerate images.
 - Meta Instagram Graph API publishing when credentials and public image hosting are configured.
@@ -163,9 +162,15 @@ Useful references:
 
 ## Image Rights
 
-The default `IMAGE_POLICY=branded_cards` prevents article, publisher, and news-channel images from appearing in generated slides. Slides still include source courtesy text and links in the Instagram description.
+The default production setting is `IMAGE_POLICY=article_images` with
+`REQUIRE_REAL_IMAGES=true`, so generated posts use real article images and skip
+cycles when enough real images are not available. The image extractor filters
+common logo/icon/placeholder URLs, but article images can still carry rights
+risk. Manual review is recommended for local approval flows, and every post
+keeps visible courtesy/source text.
 
-`IMAGE_POLICY=article_images` is available only as an explicit opt-in. If enabled, manual approval remains mandatory because attribution does not automatically grant image reuse rights.
+Set `IMAGE_POLICY=branded_cards` only if you want the older no-external-image
+fallback card style.
 
 ## Commands
 

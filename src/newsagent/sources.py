@@ -28,6 +28,21 @@ DESCRIPTION_META_KEYS = (
     ("name", "description"),
 )
 IMAGE_ATTRS = ("src", "data-src", "data-original", "data-lazy-src")
+BLOCKED_IMAGE_URL_TOKENS = (
+    "logo",
+    "sprite",
+    "favicon",
+    "icon-",
+    "/icon",
+    "avatar",
+    "author",
+    "placeholder",
+    "default-image",
+    "default_img",
+    "blank.",
+    "transparent.",
+    "tracking",
+)
 
 
 CATEGORY_KEYWORDS = {
@@ -507,7 +522,7 @@ def absolutize_image_url(value: object, base_url: str) -> str:
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return ""
     lowered = absolute.lower()
-    if any(token in lowered for token in ("logo", "sprite", "favicon", "icon-")):
+    if any(token in lowered for token in BLOCKED_IMAGE_URL_TOKENS):
         return ""
     return absolute
 

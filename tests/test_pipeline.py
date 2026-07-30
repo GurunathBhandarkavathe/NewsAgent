@@ -275,6 +275,35 @@ def test_real_cycle_requires_loadable_real_images(monkeypatch, tmp_path: Path) -
     assert all(story.rights_risk == "reused_article_image_requires_manual_rights_review" for story in draft.stories)
 
 
+def test_real_cycle_skips_when_required_real_images_are_missing(monkeypatch, tmp_path: Path) -> None:
+    config = make_config(
+        tmp_path,
+        draft_min_items=4,
+        draft_max_items=5,
+        image_policy="article_images",
+        require_real_images=True,
+    )
+    db = Database(config.db_path)
+    items = [
+        NewsItem("India parliament story", "https://example.com/politics", "Example", "politics"),
+        NewsItem("Bollywood film story", "https://example.com/films", "Example", "films"),
+        NewsItem("India cricket story", "https://example.com/sports", "Example", "sports"),
+        NewsItem("Supreme Court policy story", "https://example.com/current", "Example", "current_affairs"),
+        NewsItem("World India story", "https://example.com/world", "Example", "international"),
+    ]
+
+    monkeypatch.setattr("newsagent.pipeline.collect_news", lambda cfg: (items, [{"adapter": "test", "status": "ok"}]))
+    monkeypatch.setattr(
+        "newsagent.pipeline.enrich_article_images",
+        lambda story_items, limit: {"adapter": "article_image_enrichment", "status": "ok", "filled": 0},
+    )
+    monkeypatch.setattr("newsagent.pipeline.load_remote_image", lambda url: None)
+
+    draft = run_cycle(config, db, use_mock=False)
+
+    assert draft is None
+
+
 def test_regenerate_images_replaces_draft_story_set(monkeypatch, tmp_path: Path) -> None:
     config = make_config(
         tmp_path,

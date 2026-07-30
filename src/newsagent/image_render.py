@@ -129,6 +129,8 @@ def mix(first: tuple[int, int, int], second: tuple[int, int, int], amount: float
 def load_remote_image(url: str) -> Image.Image | None:
     if not url:
         return None
+    if is_blocked_image_url(url):
+        return None
     try:
         response = requests.get(url, timeout=12, headers={"User-Agent": "NewsAgent/0.1"})
         response.raise_for_status()
@@ -136,9 +138,42 @@ def load_remote_image(url: str) -> Image.Image | None:
             (".jpg", ".jpeg", ".png", ".webp")
         ):
             return None
-        return Image.open(io.BytesIO(response.content))
+        image = Image.open(io.BytesIO(response.content))
+        if not is_usable_article_image(image):
+            return None
+        return image
     except Exception:
         return None
+
+
+def is_blocked_image_url(url: str) -> bool:
+    lowered = url.lower()
+    blocked = (
+        "logo",
+        "sprite",
+        "favicon",
+        "icon-",
+        "/icon",
+        "avatar",
+        "author",
+        "placeholder",
+        "default-image",
+        "default_img",
+        "blank.",
+        "transparent.",
+        "tracking",
+    )
+    return any(token in lowered for token in blocked)
+
+
+def is_usable_article_image(image: Image.Image) -> bool:
+    width, height = image.size
+    if width < 420 or height < 260:
+        return False
+    ratio = width / height if height else 0
+    if ratio < 0.45 or ratio > 3.2:
+        return False
+    return True
 
 
 def load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
