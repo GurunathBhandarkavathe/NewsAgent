@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 from newsagent.briefs import description_detail, slide_brief
+from newsagent.caption import PUBLISH_CAPTION_MAX_CHARS, build_caption
 from newsagent.db import Database
 from newsagent.models import DraftStory, NewsItem
 from newsagent.pipeline import regenerate_draft_with_fresh_images, run_cycle
@@ -51,6 +52,35 @@ def test_caption_has_expected_lines_sources_and_links(tmp_path: Path) -> None:
     assert "Sources/courtesy:" in draft.caption
     assert "Full report:" in draft.caption
     assert "https://example.com/" in draft.caption
+    assert len(draft.caption) <= PUBLISH_CAPTION_MAX_CHARS
+
+
+def test_caption_stays_under_instagram_publish_limit_with_long_news_details() -> None:
+    stories = [
+        DraftStory(
+            key=f"story-{index}",
+            title=f"Very long India news headline number {index} " + ("with extra context " * 10),
+            url="https://example.com/news/" + ("very-long-path-segment-" * 8) + str(index),
+            source="Example National News Source With Long Name",
+            category="politics",
+            published_at=None,
+            summary=(
+                "This update includes a detailed explanation of the issue, the people involved, "
+                "the latest official response, and what readers should know next. "
+            )
+            * 5,
+            image_url="",
+            source_count=1,
+            score=1.0,
+        )
+        for index in range(1, 6)
+    ]
+
+    caption = build_caption(stories)
+
+    assert len(caption) <= PUBLISH_CAPTION_MAX_CHARS
+    assert "Source/courtesy:" in caption
+    assert "#SamacharBharat" in caption
 
 
 def test_story_briefs_use_summary_context_instead_of_headline_only(tmp_path: Path) -> None:

@@ -9,6 +9,7 @@ from urllib.parse import quote, urljoin
 
 import requests
 
+from .caption import PUBLISH_CAPTION_MAX_CHARS, fit_caption_to_instagram
 from .config import Config
 from .meta_api import meta_response_error_detail, redact_sensitive_meta_text
 from .models import Draft
@@ -58,7 +59,7 @@ class Publisher:
             {
                 "media_type": "CAROUSEL",
                 "children": ",".join(children),
-                "caption": draft.caption,
+                "caption": fit_caption_to_instagram(draft.caption, PUBLISH_CAPTION_MAX_CHARS),
                 "access_token": self.config.meta_access_token,
             },
         )

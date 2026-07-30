@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from newsagent.caption import PUBLISH_CAPTION_MAX_CHARS
 from newsagent.db import Database
 from newsagent.pipeline import run_cycle
 from newsagent.publisher import Publisher
@@ -90,3 +91,34 @@ def test_meta_publisher_uses_instagram_host_for_igaa_tokens(monkeypatch, tmp_pat
     assert result.status == "published"
     assert calls
     assert all(call.startswith("https://graph.instagram.com/v26.0/") for call in calls)
+
+
+def test_meta_publisher_trims_existing_overlong_caption(monkeypatch, tmp_path: Path) -> None:
+    config = make_config(
+        tmp_path,
+        instagram_business_account_id="17890000000000000",
+        meta_access_token="test-token",
+        public_asset_base_url="https://cdn.example.test/newsagent/",
+    )
+    db = Database(config.db_path)
+    draft = run_cycle(config, db, use_mock=True)
+    assert draft is not None
+    draft.caption = "Samachar Bharat trend watch:\n" + ("Long caption detail. " * 250)
+
+    calls: list[tuple[str, dict]] = []
+
+    def fake_post(url: str, data: dict, timeout: int):
+        calls.append((url, data))
+        if url.endswith("/media_publish"):
+            return FakeResponse({"id": "published-media-id"})
+        if data.get("media_type") == "CAROUSEL":
+            return FakeResponse({"id": "carousel-container-id"})
+        return FakeResponse({"id": f"child-{len(calls)}"})
+
+    monkeypatch.setattr("newsagent.publisher.requests.post", fake_post)
+
+    result = Publisher(config).publish(draft)
+
+    container_caption = calls[-2][1]["caption"]
+    assert result.status == "published"
+    assert len(container_caption) <= PUBLISH_CAPTION_MAX_CHARS

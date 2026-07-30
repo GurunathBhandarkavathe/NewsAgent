@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from .briefs import description_detail
+from .briefs import complete_sentence, story_context
 from .models import DraftStory
 from .utils import source_from_url, truncate_words
 
+
+INSTAGRAM_CAPTION_MAX_CHARS = 2200
+PUBLISH_CAPTION_MAX_CHARS = 2100
 
 OPENERS = (
     "{brand} trend watch: the top India updates this cycle.",
@@ -27,11 +30,47 @@ def build_caption(
     brand_name: str = "Samachar Bharat",
     brand_handle: str = "@smachar.bh",
     brand_tagline: str = "Bharat in 5 slides. Every 3 hours.",
+    max_chars: int = PUBLISH_CAPTION_MAX_CHARS,
 ) -> str:
     variant_index = variant % len(OPENERS)
+    for detail_chars in (210, 170, 140, 110):
+        caption = compose_caption(
+            stories,
+            variant_index,
+            brand_name=brand_name,
+            brand_handle=brand_handle,
+            brand_tagline=brand_tagline,
+            detail_max_chars=detail_chars,
+            include_full_urls=True,
+        )
+        if len(caption) <= max_chars:
+            return caption
+
+    compact = compose_caption(
+        stories,
+        variant_index,
+        brand_name=brand_name,
+        brand_handle=brand_handle,
+        brand_tagline=brand_tagline,
+        detail_max_chars=110,
+        include_full_urls=False,
+    )
+    return fit_caption_to_instagram(compact, max_chars=max_chars)
+
+
+def compose_caption(
+    stories: list[DraftStory],
+    variant_index: int,
+    *,
+    brand_name: str,
+    brand_handle: str,
+    brand_tagline: str,
+    detail_max_chars: int,
+    include_full_urls: bool,
+) -> str:
     lines: list[str] = [OPENERS[variant_index].format(brand=brand_name)]
     for index, story in enumerate(stories, start=1):
-        lines.extend(story_lines(index, story, variant_index))
+        lines.extend(story_lines(index, story, variant_index, detail_max_chars, include_full_urls))
 
     source_names = ", ".join(dict.fromkeys(story.source for story in stories))
     lines.append(f"Sources/courtesy: {source_names}.")
@@ -41,11 +80,17 @@ def build_caption(
     return "\n".join(lines)
 
 
-def story_lines(index: int, story: DraftStory, variant_index: int) -> list[str]:
+def story_lines(
+    index: int,
+    story: DraftStory,
+    variant_index: int,
+    detail_max_chars: int = 170,
+    include_full_urls: bool = True,
+) -> list[str]:
     label = story.category.replace("_", " ").title()
-    title = truncate_words(story.title, max_words=16, max_chars=130)
-    detail = description_detail(story)
-    source = story.source.rstrip(".")
+    title = truncate_words(story.title, max_words=14, max_chars=96)
+    detail = complete_sentence(story_context(story, max_words=30, max_chars=detail_max_chars))
+    source = truncate_words(story.source.rstrip("."), max_words=6, max_chars=56)
     host = source_from_url(story.url)
 
     if variant_index == 1:
@@ -60,8 +105,25 @@ def story_lines(index: int, story: DraftStory, variant_index: int) -> list[str]:
     return [
         first,
         f"{detail_prefix}: {detail}",
-        f"Source/courtesy: {source} | Full report: {host}: {story.url}",
+        source_line(source, host, story.url, include_full_urls),
     ]
+
+
+def source_line(source: str, host: str, url: str, include_full_url: bool) -> str:
+    if include_full_url:
+        return f"Source/courtesy: {source} | Full report: {host}: {url}"
+    return f"Source/courtesy: {source} | Full report: {host}"
+
+
+def fit_caption_to_instagram(caption: str, max_chars: int = PUBLISH_CAPTION_MAX_CHARS) -> str:
+    if len(caption) <= max_chars:
+        return caption
+    suffix = "\nSources/courtesy retained above. #SamacharBharat #NewsBrief"
+    room = max(0, max_chars - len(suffix))
+    trimmed = caption[:room].rsplit("\n", 1)[0].rstrip()
+    if not trimmed:
+        trimmed = caption[:room].rstrip()
+    return f"{trimmed}{suffix}"[:max_chars]
 
 
 def brand_hashtag(brand_name: str) -> str:
