@@ -1,6 +1,6 @@
 # Samachar Bharat NewsAgent
 
-Samachar Bharat NewsAgent is a local-first Python app that drafts Instagram posts from India-focused trending news. It gathers stories, scores and deduplicates them, creates 1080x1350 slides, writes detailed Instagram descriptions with context and source links, and waits for human approval before posting.
+Samachar Bharat NewsAgent is a one-owner Python app that drafts or automatically publishes Instagram posts from India-focused trending news. It gathers stories, scores and deduplicates them, creates 1080x1350 slides, writes detailed Instagram descriptions with context and source links, and can run fully unattended from GitHub Actions after the one-time Meta/GitHub setup.
 
 ## What It Builds
 
@@ -10,7 +10,8 @@ Samachar Bharat NewsAgent is a local-first Python app that drafts Instagram post
 - Sources: direct publisher RSS feeds, Google Trends India RSS, and GDELT DOC API.
 - Default production image policy uses real article images and requires every selected story to have a loadable image; if enough real images are not available, the cycle is skipped instead of posting fallback cards.
 - Local JSON session store with draft status, dedupe memory, and source logs.
-- Approval dashboard with approve, reject, hold, regenerate description, and regenerate images.
+- Optional local approval dashboard with approve, reject, hold, regenerate description, and regenerate images.
+- Unattended GitHub Actions workflow that can publish on schedule without opening the local app.
 - Meta Instagram Graph API publishing when credentials and public image hosting are configured.
 - Manual export fallback when Meta credentials or public asset URLs are missing.
 - Samachar Bharat branding on dashboard, descriptions, and generated slides.
@@ -102,6 +103,10 @@ newsagent production
 
 The production command starts the approval dashboard and creates a real draft immediately, then continues every 3 hours on IST boundaries. It does not publish without dashboard approval.
 
+For fully automatic posting, use the GitHub Actions workflow instead of the
+local production command. The local command is meant for review/debugging; the
+hosted workflow is the hands-free publisher.
+
 ## Local-Only Use
 
 This project is intended for one-owner use. Keep `DASHBOARD_HOST=127.0.0.1`
@@ -113,9 +118,11 @@ are stored in `NEWSAGENT_SESSION_PATH`, which defaults to
 ## GitHub Actions Posting
 
 The repository includes `.github/workflows/publish-instagram.yml` for an
-optional owner-only hosted run. It creates one draft, uploads the generated
-slides to GitHub Pages so Meta can fetch public HTTPS images, then publishes
-that exact draft id through Meta as separate feed posts by default.
+owner-only hosted run. It creates one draft, uploads the generated slides to
+GitHub Pages so Meta can fetch public HTTPS images, then publishes that exact
+draft id through Meta as separate feed posts by default. This is the unattended
+production path: no local server, browser tab, dashboard approval, or manual
+trigger is needed after the one-time setup.
 
 Add these repository secrets before enabling the workflow:
 
@@ -123,9 +130,9 @@ Add these repository secrets before enabling the workflow:
 - `META_ACCESS_TOKEN`
 - `META_API_HOST`, optional; leave blank for auto-detection
 
-Enable GitHub Pages for Actions in the repository settings. The workflow can be
-run manually from the Actions tab and is also scheduled every 3 hours on IST
-boundaries.
+Enable GitHub Pages for Actions in the repository settings. Keep Actions
+enabled. The workflow can be run manually from the Actions tab for testing, and
+then runs automatically every 3 hours on IST boundaries.
 
 Example always-on launch files are included:
 

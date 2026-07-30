@@ -1,4 +1,4 @@
-name: Publish Instagram Carousel
+name: Publish Instagram Posts
 
 on:
   workflow_dispatch:
