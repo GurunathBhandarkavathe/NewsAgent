@@ -70,14 +70,14 @@ def build_story_post_caption(
 ) -> str:
     label = story.category.replace("_", " ").title()
     title = truncate_words(story.title, max_words=24, max_chars=180)
-    detail = complete_sentence(story_context(story, max_words=115, max_chars=900))
+    detail = complete_sentence(story_context(story, max_words=210, max_chars=1450))
     source = truncate_words(story.source.rstrip("."), max_words=10, max_chars=90)
     host = source_from_url(story.url)
     lines = [
         f"{brand_name} update {index}/{total}: {label}",
         title,
         "",
-        f"Details: {detail}",
+        f"Full brief: {detail}",
         "",
         f"Source/courtesy: {source}",
         f"Full report: {host}: {story.url}",

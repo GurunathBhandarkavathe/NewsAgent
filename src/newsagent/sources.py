@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 
 from .config import Config
 from .models import NewsItem
-from .utils import clean_text, parse_datetime, source_from_url, utcnow
+from .utils import clean_text, parse_datetime, source_from_url, truncate_words, utcnow
 
 
 USER_AGENT = "NewsAgent/0.1 (+local approval workflow)"
@@ -278,39 +278,70 @@ def enrich_article_images(items: list[NewsItem], limit: int = 80, timeout: int =
     }
 
 
+def enrich_article_details(items: list[NewsItem], limit: int = 5, timeout: int = 12) -> dict:
+    inspected = 0
+    enriched = 0
+    errors = 0
+    for item in items[:limit]:
+        if is_wrapper_url(item.url):
+            continue
+        inspected += 1
+        original = item.summary
+        try:
+            metadata = extract_article_metadata(item.url, timeout=timeout)
+        except Exception:
+            errors += 1
+            continue
+        item.summary = richer_article_summary(item.summary, metadata.get("description", ""), metadata.get("article_text", ""))
+        if item.summary != original:
+            enriched += 1
+    return {
+        "adapter": "article_detail_enrichment",
+        "status": "ok",
+        "inspected": inspected,
+        "enriched": enriched,
+        "errors": errors,
+    }
+
+
 def extract_article_image(url: str, timeout: int = 12) -> str:
     return extract_article_metadata(url, timeout=timeout)["image_url"]
 
 
 def extract_article_metadata(url: str, timeout: int = 12) -> dict[str, str]:
     if not url:
-        return {"image_url": "", "description": ""}
+        return empty_article_metadata()
     if is_wrapper_url(url):
-        return {"image_url": "", "description": ""}
+        return empty_article_metadata()
     response = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=timeout)
     response.raise_for_status()
     content_type = response.headers.get("content-type", "")
     if "html" not in content_type and "xml" not in content_type and content_type:
-        return {"image_url": "", "description": ""}
+        return empty_article_metadata()
 
     soup = BeautifulSoup(response.text, "html.parser")
     description = extract_article_description(soup)
+    article_text = extract_article_body_text(soup)
     image_url = ""
     for attr, value in IMAGE_META_KEYS:
         tag = soup.find("meta", attrs={attr: value})
         image_url = absolutize_image_url(tag.get("content") if tag else "", url)
         if image_url:
-            return {"image_url": image_url, "description": description}
+            return {"image_url": image_url, "description": description, "article_text": article_text}
 
     json_ld_image = extract_json_ld_image(soup, url)
     if json_ld_image:
-        return {"image_url": json_ld_image, "description": description}
+        return {"image_url": json_ld_image, "description": description, "article_text": article_text}
 
     for img in soup.find_all("img")[:40]:
         image_url = image_from_img_tag(img, url)
         if image_url:
-            return {"image_url": image_url, "description": description}
-    return {"image_url": "", "description": description}
+            return {"image_url": image_url, "description": description, "article_text": article_text}
+    return {"image_url": "", "description": description, "article_text": article_text}
+
+
+def empty_article_metadata() -> dict[str, str]:
+    return {"image_url": "", "description": "", "article_text": ""}
 
 
 def needs_better_summary(summary: str, title: str) -> bool:
@@ -328,6 +359,69 @@ def extract_article_description(soup: BeautifulSoup) -> str:
         if len(description) >= 40:
             return description
     return ""
+
+
+def extract_article_body_text(soup: BeautifulSoup, max_chars: int = 1600) -> str:
+    for tag in soup(["script", "style", "noscript", "svg", "form", "header", "footer", "nav", "aside"]):
+        tag.decompose()
+    roots = soup.find_all("article")
+    if not roots:
+        roots = soup.find_all("main")
+    if not roots and soup.body:
+        roots = [soup.body]
+
+    paragraphs: list[str] = []
+    seen: set[str] = set()
+    for root in roots[:3]:
+        for node in root.find_all(["p", "li"]):
+            paragraph = clean_text(node.get_text(" "))
+            if not useful_article_paragraph(paragraph):
+                continue
+            key = paragraph.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            paragraphs.append(paragraph)
+            if len(" ".join(paragraphs)) >= max_chars:
+                return truncate_words(" ".join(paragraphs), max_words=230, max_chars=max_chars)
+    return truncate_words(" ".join(paragraphs), max_words=230, max_chars=max_chars)
+
+
+def useful_article_paragraph(text: str) -> bool:
+    paragraph = clean_text(text)
+    if len(paragraph) < 55:
+        return False
+    lowered = paragraph.lower()
+    blocked = (
+        "advertisement",
+        "also read",
+        "read more",
+        "subscribe",
+        "follow us",
+        "sign up",
+        "download the app",
+        "copyright",
+        "all rights reserved",
+        "click here",
+    )
+    if any(token in lowered for token in blocked):
+        return False
+    if len(paragraph.split()) < 9:
+        return False
+    return True
+
+
+def richer_article_summary(existing: str, description: str, article_text: str) -> str:
+    parts: list[str] = []
+    for value in (existing, description, article_text):
+        text = clean_text(value)
+        if not text:
+            continue
+        if any(text.lower() == part.lower() for part in parts):
+            continue
+        parts.append(text)
+    merged = " ".join(parts)
+    return truncate_words(merged, max_words=240, max_chars=1650)
 
 
 def publisher_source(feed_source: str, link: str, feed_url: str) -> str:

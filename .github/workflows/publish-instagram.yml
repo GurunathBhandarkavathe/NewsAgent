@@ -23,6 +23,7 @@ env:
   NEWSAGENT_ASSETS_DIR: public-assets
   NEWSAGENT_SESSION_PATH: data/session-store.json
   POST_FORMAT: separate_posts
+  ARTICLE_DETAIL_ENRICHMENT: "true"
   IMAGE_POLICY: branded_cards
   REQUIRE_REAL_IMAGES: "false"
   META_GRAPH_VERSION: v26.0

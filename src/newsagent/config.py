@@ -115,6 +115,7 @@ class Config:
     draft_max_items: int = field(default_factory=lambda: _int("DRAFT_MAX_ITEMS", 5))
     post_format: str = field(default_factory=lambda: os.getenv("POST_FORMAT", "separate_posts"))
     image_policy: str = field(default_factory=lambda: os.getenv("IMAGE_POLICY", "branded_cards"))
+    article_detail_enrichment: bool = field(default_factory=lambda: _bool("ARTICLE_DETAIL_ENRICHMENT", True))
     require_real_images: bool = field(default_factory=lambda: _bool("REQUIRE_REAL_IMAGES", False))
     image_enrichment_limit: int = field(default_factory=lambda: _int("IMAGE_ENRICHMENT_LIMIT", 80))
     dashboard_host: str = field(default_factory=lambda: os.getenv("DASHBOARD_HOST", "127.0.0.1"))

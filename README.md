@@ -17,6 +17,7 @@ Samachar Bharat NewsAgent is a local-first Python app that drafts Instagram post
 - Samachar Bharat branding on dashboard, descriptions, and generated slides.
 - Slide text uses clear news-brief sentences instead of headline-only text.
 - Instagram descriptions include detailed context, courtesy, and a full-report link for each post.
+- Selected real stories are enriched from article-page metadata/body text before captions are written, so descriptions are fuller than short RSS snippets when the source page allows extraction.
 
 ## Setup
 
@@ -149,6 +150,9 @@ The default `POST_FORMAT=separate_posts` publishes each selected story as its
 own feed post with a story-specific caption. Set `POST_FORMAT=carousel` only if
 you want the older one-carousel-per-cycle behavior.
 
+`ARTICLE_DETAIL_ENRICHMENT=true` fetches the selected article pages and extracts
+additional article context for the `Full brief` section of each post caption.
+
 Useful references:
 
 - Meta Content Publishing: https://developers.facebook.com/documentation/instagram-platform/content-publishing
@@ -185,6 +189,7 @@ pytest
 
 The automated suite covers mocked draft generation, category balancing,
 deduplication, JSON session storage, description references, image dimensions,
-dashboard approval actions, token protection, manual export fallback, Meta
-separate-post request sequencing, optional carousel fallback, RSS parsing,
-Google Trends categorization, source adapter failure logs, and config defaults.
+dashboard approval actions, article detail enrichment, token protection, manual
+export fallback, Meta separate-post request sequencing, optional carousel
+fallback, RSS parsing, Google Trends categorization, source adapter failure
+logs, and config defaults.

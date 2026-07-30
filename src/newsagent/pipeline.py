@@ -12,7 +12,7 @@ from .db import Database
 from .image_render import load_remote_image, render_draft_images
 from .models import Draft, DraftStory
 from .scoring import cluster_items, score_items, select_balanced
-from .sources import collect_news, enrich_article_images, mock_news_items
+from .sources import collect_news, enrich_article_details, enrich_article_images, mock_news_items
 from .utils import isoformat, slugify, utcnow
 
 
@@ -32,6 +32,9 @@ def run_cycle(config: Config, db: Database | None = None, *, use_mock: bool = Fa
         fresh, image_ready_log = keep_items_with_loadable_images(fresh, config.image_enrichment_limit)
     skipped = [item for item in scored if item.key in seen]
     selected = select_balanced(fresh, min_items=config.draft_min_items, max_items=config.draft_max_items)
+    detail_log = None
+    if len(selected) >= config.draft_min_items and config.article_detail_enrichment and not use_mock:
+        detail_log = enrich_article_details(selected, limit=config.draft_max_items)
 
     log = {
         "started_at": isoformat(started_at),
@@ -46,6 +49,8 @@ def run_cycle(config: Config, db: Database | None = None, *, use_mock: bool = Fa
     }
     if image_ready_log:
         log["image_ready"] = image_ready_log
+    if detail_log:
+        source_logs.append(detail_log)
 
     if len(selected) < config.draft_min_items:
         db.log_event("warning", "Not enough fresh stories to create a draft.", log)
@@ -102,6 +107,9 @@ def regenerate_draft_with_fresh_images(config: Config, db: Database, draft: Draf
     if config.uses_article_images and config.require_real_images:
         fresh, image_ready_log = keep_items_with_loadable_images(fresh, config.image_enrichment_limit)
     selected = select_balanced(fresh, min_items=config.draft_min_items, max_items=config.draft_max_items)
+    detail_log = None
+    if len(selected) >= config.draft_min_items and config.article_detail_enrichment:
+        detail_log = enrich_article_details(selected, limit=config.draft_max_items)
 
     refresh_log = {
         "started_at": isoformat(started_at),
@@ -115,6 +123,8 @@ def regenerate_draft_with_fresh_images(config: Config, db: Database, draft: Draf
     }
     if image_ready_log:
         refresh_log["image_ready"] = image_ready_log
+    if detail_log:
+        source_logs.append(detail_log)
 
     if len(selected) < config.draft_min_items:
         return None, refresh_log

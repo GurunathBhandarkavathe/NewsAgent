@@ -6,7 +6,15 @@ from types import SimpleNamespace
 
 from newsagent.models import NewsItem
 from newsagent.scoring import cluster_items, score_items, select_balanced
-from newsagent.sources import GoogleTrendsAdapter, RSSAdapter, collect_news, enrich_article_images, extract_article_image, extract_article_metadata
+from newsagent.sources import (
+    GoogleTrendsAdapter,
+    RSSAdapter,
+    collect_news,
+    enrich_article_details,
+    enrich_article_images,
+    extract_article_image,
+    extract_article_metadata,
+)
 from newsagent.utils import utcnow
 
 from helpers import make_config
@@ -62,6 +70,52 @@ def test_extract_article_image_uses_open_graph_metadata(monkeypatch) -> None:
 
     assert image_url == "https://news.example/photos/news-image.jpg"
     assert metadata["description"] == "This is a useful source-written context line for the article."
+
+
+def test_extract_article_metadata_collects_article_body_context(monkeypatch) -> None:
+    html = """
+    <html>
+      <head>
+        <meta name="description" content="Short source summary for the story.">
+      </head>
+      <body>
+        <nav>This should not appear.</nav>
+        <article>
+          <p>Officials said the decision was taken after a review meeting with state representatives and sector experts.</p>
+          <p>The report added that the next phase will include public consultations, implementation timelines and follow-up notices.</p>
+          <p>Advertisement</p>
+        </article>
+      </body>
+    </html>
+    """
+    monkeypatch.setattr("newsagent.sources.requests.get", lambda *args, **kwargs: FakeHTTPResponse(html))
+
+    metadata = extract_article_metadata("https://news.example/story")
+
+    assert "review meeting with state representatives" in metadata["article_text"]
+    assert "public consultations" in metadata["article_text"]
+    assert "Advertisement" not in metadata["article_text"]
+
+
+def test_article_detail_enrichment_prefers_richer_article_context(monkeypatch) -> None:
+    html = """
+    <html>
+      <body>
+        <article>
+          <p>Officials said the move follows weeks of talks and will change how the programme is implemented across states.</p>
+          <p>The article said departments will publish a timeline, clarify eligibility and issue district-level instructions next week.</p>
+        </article>
+      </body>
+    </html>
+    """
+    item = NewsItem("India policy update", "https://news.example/story", "Example", "politics", summary="Short update")
+    monkeypatch.setattr("newsagent.sources.requests.get", lambda *args, **kwargs: FakeHTTPResponse(html))
+
+    log = enrich_article_details([item])
+
+    assert log["enriched"] == 1
+    assert "weeks of talks" in item.summary
+    assert "district-level instructions" in item.summary
 
 
 def test_article_enrichment_fills_missing_summary_from_metadata(monkeypatch) -> None:

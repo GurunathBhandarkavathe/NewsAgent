@@ -103,11 +103,37 @@ def test_separate_post_caption_has_detailed_single_story_description() -> None:
     caption = build_story_post_caption(story, 1, 5)
 
     assert caption.startswith("Samachar Bharat update 1/5: Politics")
-    assert "Details:" in caption
+    assert "Full brief:" in caption
     assert "citizen safeguards" in caption
     assert "Source/courtesy: Example News" in caption
     assert "Full report: example.com: https://example.com/politics/digital-governance-bill" in caption
     assert len(caption) <= PUBLISH_CAPTION_MAX_CHARS
+
+
+def test_real_cycle_enriches_selected_story_descriptions(monkeypatch, tmp_path: Path) -> None:
+    config = make_config(tmp_path, draft_min_items=4, draft_max_items=5)
+    db = Database(config.db_path)
+    items = [
+        NewsItem("India parliament story", "https://example.com/politics", "Example", "politics", summary="Short politics"),
+        NewsItem("Bollywood film story", "https://example.com/films", "Example", "films", summary="Short films"),
+        NewsItem("India cricket story", "https://example.com/sports", "Example", "sports", summary="Short sports"),
+        NewsItem("Supreme Court policy story", "https://example.com/current", "Example", "current_affairs", summary="Short current"),
+        NewsItem("World India story", "https://example.com/world", "Example", "international", summary="Short world"),
+    ]
+
+    def fake_enrich(story_items, limit):
+        for item in story_items:
+            item.summary = f"{item.summary}. Expanded article context with named stakeholders, official responses and expected next steps."
+        return {"adapter": "article_detail_enrichment", "status": "ok", "enriched": len(story_items)}
+
+    monkeypatch.setattr("newsagent.pipeline.collect_news", lambda cfg: (items, [{"adapter": "test", "status": "ok"}]))
+    monkeypatch.setattr("newsagent.pipeline.enrich_article_details", fake_enrich)
+
+    draft = run_cycle(config, db, use_mock=False)
+
+    assert draft is not None
+    assert all("Expanded article context" in story.summary for story in draft.stories)
+    assert any(log["adapter"] == "article_detail_enrichment" for log in draft.log["source_logs"])
 
 
 def test_story_briefs_use_summary_context_instead_of_headline_only(tmp_path: Path) -> None:
