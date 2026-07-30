@@ -3,8 +3,8 @@ name: Cron Heartbeat
 on:
   workflow_dispatch:
   schedule:
-    # Diagnostic schedule, offset from the publish workflow.
-    - cron: "1,6,11,16,21,26,31,36,41,46,51,56 * * * *"
+    # Diagnostic schedule. This does not publish anything.
+    - cron: "*/10 * * * *"
 
 permissions:
   contents: read

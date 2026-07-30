@@ -3,10 +3,9 @@ name: Publish Instagram Posts
 on:
   workflow_dispatch:
   schedule:
-    # TEMP TEST MODE: GitHub Actions' shortest supported schedule is every 5 minutes.
-    # Offset from :00/:05/:10 to reduce GitHub scheduler delay/drop risk.
+    # TEMP TEST MODE: every 10 minutes. GitHub schedules are UTC.
     # Revert to: 30 0,3,6,9,12,15,18,21 * * *
-    - cron: "4,9,14,19,24,29,34,39,44,49,54,59 * * * *"
+    - cron: "*/10 * * * *"
 
 permissions:
   contents: read
