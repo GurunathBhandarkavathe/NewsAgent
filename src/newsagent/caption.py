@@ -79,8 +79,6 @@ def build_story_post_caption(
         "",
         f"Full brief: {detail}",
         "",
-        f"Source/courtesy: {source}",
-        f"Full report: {host}: {story.url}",
         f"Follow {brand_handle} for {brand_tagline}",
         f"{brand_hashtag(brand_name)} #BharatNews #NewsUpdate",
     ]
@@ -101,8 +99,6 @@ def compose_caption(
     for index, story in enumerate(stories, start=1):
         lines.extend(story_lines(index, story, variant_index, detail_max_chars, include_full_urls))
 
-    source_names = ", ".join(dict.fromkeys(story.source for story in stories))
-    lines.append(f"Sources/courtesy: {source_names}.")
     lines.append("Read full reports from the links listed with each update above.")
     lines.append(f"Follow {brand_handle} for {brand_tagline}")
     lines.append(HASHTAG_SETS[variant_index].format(brand_tag=brand_hashtag(brand_name)))
@@ -134,20 +130,17 @@ def story_lines(
     return [
         first,
         f"{detail_prefix}: {detail}",
-        source_line(source, host, story.url, include_full_urls),
     ]
 
 
 def source_line(source: str, host: str, url: str, include_full_url: bool) -> str:
-    if include_full_url:
-        return f"Source/courtesy: {source} | Full report: {host}: {url}"
-    return f"Source/courtesy: {source} | Full report: {host}"
+    return ""
 
 
 def fit_caption_to_instagram(caption: str, max_chars: int = PUBLISH_CAPTION_MAX_CHARS) -> str:
     if len(caption) <= max_chars:
         return caption
-    suffix = "\nSources/courtesy retained above. #SamacharBharat #NewsBrief"
+    suffix = "\n#SamacharBharat #NewsBrief"
     room = max(0, max_chars - len(suffix))
     trimmed = caption[:room].rsplit("\n", 1)[0].rstrip()
     if not trimmed:

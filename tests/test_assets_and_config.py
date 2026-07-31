@@ -66,5 +66,7 @@ def test_production_env_example_uses_required_article_images() -> None:
     assert "REQUIRE_REAL_IMAGES=true" in content
     assert "IMAGE_POLICY: article_images" in workflow
     assert 'REQUIRE_REAL_IMAGES: "true"' in workflow
-    assert 'DRAFT_MIN_ITEMS: "4"' in workflow
-    assert 'DRAFT_MAX_ITEMS: "5"' in workflow
+    assert 'DRAFT_MIN_ITEMS: "10"' in workflow
+    assert 'DRAFT_MAX_ITEMS: "10"' in workflow
+    assert "DRAFT_MIN_ITEMS=10" in content
+    assert "DRAFT_MAX_ITEMS=10" in content

@@ -76,13 +76,27 @@ def select_balanced(items: list[NewsItem], min_items: int = 4, max_items: int = 
 
     selected: list[NewsItem] = []
     selected_keys: set[str] = set()
-    for category in CATEGORIES:
-        if len(selected) >= max_items:
+    if max_items <= 0:
+        return []
+
+    category_order = [category for category in CATEGORIES if by_category.get(category)]
+    if not category_order:
+        return sorted(items, key=lambda story: story.score, reverse=True)[:max_items]
+
+    while len(selected) < max_items:
+        progress = False
+        for category in category_order:
+            if len(selected) >= max_items:
+                break
+            for item in by_category.get(category, []):
+                if item.key in selected_keys:
+                    continue
+                selected.append(item)
+                selected_keys.add(item.key)
+                progress = True
+                break
+        if not progress:
             break
-        if by_category.get(category):
-            item = by_category[category][0]
-            selected.append(item)
-            selected_keys.add(item.key)
 
     if len(selected) < min_items:
         for item in sorted(items, key=lambda story: story.score, reverse=True):

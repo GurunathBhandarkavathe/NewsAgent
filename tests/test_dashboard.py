@@ -90,7 +90,8 @@ def test_dashboard_hold_reject_and_regenerate_actions_update_draft(monkeypatch, 
     regenerated = db.get_draft(draft.id)
     assert caption_response.status_code == 200
     assert b"description regenerated: variant 1" in caption_response.data
-    assert "Sources/courtesy:" in regenerated.caption
+    assert "Source/courtesy:" not in regenerated.caption
+    assert "Sources/courtesy:" not in regenerated.caption
     assert regenerated.caption != original_caption
     assert regenerated.log["caption_variant"] == 1
 
@@ -103,7 +104,7 @@ def test_dashboard_hold_reject_and_regenerate_actions_update_draft(monkeypatch, 
 
     image_response = client.post(f"/draft/{draft.id}/regenerate-images", follow_redirects=True)
     assert image_response.status_code == 200
-    assert b"images regenerated with 5 fresh stories" in image_response.data
+    assert b"images regenerated with 10 fresh stories" in image_response.data
     assert db.get_draft(draft.id).log["image_regenerated_at"]
     for story in db.get_draft(draft.id).stories:
         assert Path(story.slide_path).exists()

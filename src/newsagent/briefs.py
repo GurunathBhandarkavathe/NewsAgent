@@ -25,7 +25,7 @@ def story_context(story: DraftStory, *, max_words: int, max_chars: int) -> str:
         return truncate_words(summary, max_words=max_words, max_chars=max_chars)
 
     trimmed_title = truncate_words(title, max_words=max_words, max_chars=max_chars - 20).rstrip(".")
-    return f"The latest update says {trimmed_title}"
+    return trimmed_title
 
 
 def complete_sentence(text: str) -> str:
@@ -49,4 +49,4 @@ def title_to_sentence(title: str) -> str:
         text = f"{update} amid {issue}"
     if re.search(r"\b(says?|said|announces?|announced|orders?|ordered|asks?|asked|returns?|returned|visits?|visited|kills?|killed|wins?|won|drops?|dropped|convicts?|convicted|restrains?|restrained)\b", text, re.I):
         return text
-    return f"The report says {text}"
+    return text

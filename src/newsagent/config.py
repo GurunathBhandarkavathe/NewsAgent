@@ -46,27 +46,27 @@ def default_rss_feeds() -> dict[str, list[str]]:
         "politics": [
             "https://feeds.feedburner.com/ndtvnews-india-news",
             "https://indianexpress.com/section/india/feed/",
-            "https://www.indiatoday.in/rss/1206514",
+            "https://www.thehindu.com/feeder/default.rss",
         ],
         "films": [
             "https://feeds.feedburner.com/ndtvmovies-latest",
             "https://indianexpress.com/section/entertainment/feed/",
-            "https://www.indiatoday.in/rss/1206551",
+            "https://www.hindustantimes.com/entertainment/bollywood/rss",
         ],
         "sports": [
             "https://feeds.feedburner.com/ndtvsports-latest",
             "https://indianexpress.com/section/sports/feed/",
-            "https://www.indiatoday.in/rss/1206550",
+            "https://www.espncricinfo.com/rss/content/story/feeds/0.xml",
         ],
         "current_affairs": [
             "https://feeds.feedburner.com/ndtvnews-top-stories",
             "https://indianexpress.com/section/explained/feed/",
-            "https://www.indiatoday.in/rss/home",
+            "https://www.thehindu.com/news/national/feeder/default.rss",
         ],
         "international": [
             "https://feeds.feedburner.com/ndtvnews-world-news",
             "https://indianexpress.com/section/world/feed/",
-            "https://www.indiatoday.in/rss/1206577",
+            "https://feeds.bbci.co.uk/news/world/rss.xml",
         ],
     }
 
@@ -111,8 +111,8 @@ class Config:
     timezone: str = field(default_factory=lambda: os.getenv("TIMEZONE", "Asia/Kolkata"))
     cycle_hours: int = field(default_factory=lambda: _int("CYCLE_HOURS", 3))
     dedupe_hours: int = field(default_factory=lambda: _int("DEDUPE_HOURS", 48))
-    draft_min_items: int = field(default_factory=lambda: _int("DRAFT_MIN_ITEMS", 4))
-    draft_max_items: int = field(default_factory=lambda: _int("DRAFT_MAX_ITEMS", 5))
+    draft_min_items: int = field(default_factory=lambda: _int("DRAFT_MIN_ITEMS", 10))
+    draft_max_items: int = field(default_factory=lambda: _int("DRAFT_MAX_ITEMS", 10))
     post_format: str = field(default_factory=lambda: os.getenv("POST_FORMAT", "separate_posts"))
     image_policy: str = field(default_factory=lambda: os.getenv("IMAGE_POLICY", "branded_cards"))
     article_detail_enrichment: bool = field(default_factory=lambda: _bool("ARTICLE_DETAIL_ENRICHMENT", True))

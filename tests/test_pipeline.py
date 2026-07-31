@@ -23,8 +23,7 @@ def test_mock_cycle_generates_carousel_draft(tmp_path: Path) -> None:
 
     assert draft is not None
     assert draft.status == "draft"
-    assert 4 <= len(draft.stories) <= 5
-    assert len(draft.stories) == 5
+    assert len(draft.stories) == 10
     assert {story.category for story in draft.stories} >= {
         "politics",
         "films",
@@ -45,13 +44,12 @@ def test_caption_has_expected_lines_sources_and_links(tmp_path: Path) -> None:
     assert draft is not None
 
     lines = [line for line in draft.caption.splitlines() if line.strip()]
-    assert 18 <= len(lines) <= 24
+    assert 20 <= len(lines) <= 28
     assert "Details:" in draft.caption
     assert "Mock summary for" in draft.caption
-    assert "Source/courtesy:" in draft.caption
-    assert "Sources/courtesy:" in draft.caption
-    assert "Full report:" in draft.caption
-    assert "https://example.com/" in draft.caption
+    assert "Source/courtesy:" not in draft.caption
+    assert "Sources/courtesy:" not in draft.caption
+    assert "example.com" not in draft.caption
     assert len(draft.caption) <= PUBLISH_CAPTION_MAX_CHARS
 
 
@@ -79,7 +77,7 @@ def test_caption_stays_under_instagram_publish_limit_with_long_news_details() ->
     caption = build_caption(stories)
 
     assert len(caption) <= PUBLISH_CAPTION_MAX_CHARS
-    assert "Source/courtesy:" in caption
+    assert "Source/courtesy:" not in caption
     assert "#SamacharBharat" in caption
 
 
@@ -105,8 +103,8 @@ def test_separate_post_caption_has_detailed_single_story_description() -> None:
     assert caption.startswith("Samachar Bharat update 1/5: Politics")
     assert "Full brief:" in caption
     assert "citizen safeguards" in caption
-    assert "Source/courtesy: Example News" in caption
-    assert "Full report: example.com: https://example.com/politics/digital-governance-bill" in caption
+    assert "Source/courtesy:" not in caption
+    assert "example.com" not in caption
     assert len(caption) <= PUBLISH_CAPTION_MAX_CHARS
 
 
@@ -217,8 +215,8 @@ def test_session_store_persists_drafts_as_json_without_sqlite(tmp_path: Path) ->
     state = json.loads(Path(config.db_path).read_text(encoding="utf-8"))
     assert state["draft_order"] == [draft.id]
     assert state["drafts"][draft.id]["status"] == "draft"
-    assert len(state["drafts"][draft.id]["stories"]) == 5
-    assert len(state["seen_stories"]) == 5
+    assert len(state["drafts"][draft.id]["stories"]) == 10
+    assert len(state["seen_stories"]) == 10
 
 
 def test_config_secrets_default_to_environment_only(tmp_path: Path) -> None:

@@ -573,6 +573,30 @@ def mock_news_items(now=None) -> list[NewsItem]:
             "https://example.com/sports/badminton-final-comeback",
             "Example Sports",
         ),
+        (
+            "politics",
+            "State assembly passes key urban reform plan after budget debate",
+            "https://example.com/politics/assembly-urban-reform-plan",
+            "Example Politics",
+        ),
+        (
+            "films",
+            "Regional cinema team launches multilingual release after festival buzz",
+            "https://example.com/films/region-film-multilingual-release",
+            "Example Films",
+        ),
+        (
+            "current_affairs",
+            "National weather office issues advisory as monsoon pattern shifts across states",
+            "https://example.com/current-affairs/monsoon-pattern-shift",
+            "Example Current Affairs",
+        ),
+        (
+            "international",
+            "Global energy market reacts to renewed shipping and supply pressures",
+            "https://example.com/world/global-energy-market-reacts",
+            "Example International",
+        ),
     ]
     return [
         NewsItem(

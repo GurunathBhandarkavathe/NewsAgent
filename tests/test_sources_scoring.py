@@ -4,7 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
-from newsagent.models import NewsItem
+from newsagent.models import CATEGORIES, NewsItem
 from newsagent.scoring import cluster_items, score_items, select_balanced
 from newsagent.sources import (
     GoogleTrendsAdapter,
@@ -240,3 +240,28 @@ def test_scoring_clusters_same_story_and_selects_balanced_categories() -> None:
         "current_affairs",
         "international",
     }
+
+
+def test_select_balanced_distributes_across_categories_for_ten_slot_draft() -> None:
+    now = utcnow()
+    items = []
+    for index in range(10):
+        category = CATEGORIES[index % len(CATEGORIES)]
+        items.append(
+            NewsItem(
+                title=f"Headline {index} for {category}",
+                url=f"https://example.com/{category}/{index}",
+                source=f"Source {index}",
+                category=category,
+                published_at=now - timedelta(minutes=index),
+                score=float(10 - index),
+            )
+        )
+
+    selected = select_balanced(items, min_items=10, max_items=10)
+
+    assert len(selected) == 10
+    category_counts = {category: 0 for category in CATEGORIES}
+    for item in selected:
+        category_counts[item.category] += 1
+    assert max(category_counts.values()) - min(category_counts.values()) <= 1

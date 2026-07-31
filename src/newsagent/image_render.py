@@ -77,10 +77,8 @@ def render_slide(story: DraftStory, output_path: Path, index: int, total: int, c
     wrapped = wrap_text(brief, brief_font, 930, max_lines=4)
     draw.multiline_text((64, 992), wrapped, font=brief_font, fill=(24, 28, 32), spacing=10)
 
-    courtesy = f"Courtesy: {story.source}"
-    host = source_from_url(story.url)
-    draw.text((64, 1260), courtesy[:78], font=source_font, fill=(52, 58, 64))
-    draw.text((64, 1295), host[:78], font=small_font, fill=(92, 96, 100))
+    draw.text((64, 1260), "", font=source_font, fill=(52, 58, 64))
+    draw.text((64, 1295), "", font=small_font, fill=(92, 96, 100))
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     image.save(output_path, "JPEG", quality=92, optimize=True)
