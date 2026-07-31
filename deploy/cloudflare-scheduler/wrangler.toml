@@ -1,0 +1,19 @@
+name = "samachar-bharat-github-scheduler"
+main = "src/index.js"
+compatibility_date = "2026-07-31"
+workers_dev = true
+
+[vars]
+GITHUB_OWNER = "GurunathBhandarkavathe"
+GITHUB_REPO = "NewsAgent"
+GITHUB_WORKFLOW_ID = "publish-instagram.yml"
+GITHUB_REF = "main"
+
+[triggers]
+crons = [ "30 0,3,6,9,12,15,18,21 * * *" ]
+
+[observability]
+enabled = true
+
+[secrets]
+required = [ "GITHUB_TOKEN" ]

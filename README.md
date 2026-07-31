@@ -142,7 +142,19 @@ Create a fine-grained GitHub personal access token for this repository with:
 - Repository access: `GurunathBhandarkavathe/NewsAgent`
 - Repository permission: `Actions` = `Read and write`
 
-Configure any reliable external cron service to send this request every 3 hours:
+The repository includes a ready Cloudflare Worker scheduler in
+`deploy/cloudflare-scheduler`. Cloudflare Cron Triggers run in UTC and call a
+Worker `scheduled()` handler, which then calls GitHub's workflow dispatch API.
+Deploy it with:
+
+```bash
+cd deploy/cloudflare-scheduler
+npx wrangler secret put GITHUB_TOKEN
+npx wrangler deploy
+```
+
+You can also configure any reliable external cron service to send this request
+every 3 hours:
 
 ```bash
 curl -L -X POST \

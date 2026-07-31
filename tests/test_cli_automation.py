@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from newsagent.cli import resolve_requested_draft_id, write_draft_id_file
@@ -41,3 +42,17 @@ def test_only_one_github_workflow_publishes_instagram_posts() -> None:
     ]
 
     assert publishers == [Path(".github/workflows/publish-instagram.yml")]
+
+
+def test_cloudflare_scheduler_dispatches_publish_workflow_without_committed_token() -> None:
+    scheduler_root = Path("deploy/cloudflare-scheduler")
+    wrangler = (scheduler_root / "wrangler.toml").read_text(encoding="utf-8")
+    worker = (scheduler_root / "src/index.js").read_text(encoding="utf-8")
+
+    assert 'crons = [ "30 0,3,6,9,12,15,18,21 * * *" ]' in wrangler
+    assert 'GITHUB_WORKFLOW_ID = "publish-instagram.yml"' in wrangler
+    assert 'required = [ "GITHUB_TOKEN" ]' in wrangler
+    assert "/actions/workflows/" in worker
+    assert "/dispatches" in worker
+    assert "workflow_dispatch_sent" in worker
+    assert not re.search(r"gh[pousr]_[A-Za-z0-9_]{20,}", wrangler + worker)
