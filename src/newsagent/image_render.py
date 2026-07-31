@@ -34,7 +34,7 @@ def render_draft_images(draft: Draft, config: Config) -> None:
         story.slide_path = str(output)
 
 # Global
-LOGO = Image.open("assets/logo1.png").convert("RGBA")
+LOGO = Image.open("src/logo.png").convert("RGBA")
 LOGO.thumbnail((150, 150), Image.Resampling.LANCZOS)
 
 def render_slide(story: DraftStory, output_path: Path, index: int, total: int, config: Config) -> None:
