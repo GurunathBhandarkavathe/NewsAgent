@@ -11,7 +11,7 @@ Samachar Bharat NewsAgent is a one-owner Python app that drafts or automatically
 - Default production image policy uses real article images and requires every selected story to have a loadable image; if enough real images are not available, the cycle is skipped instead of posting fallback cards.
 - Local JSON session store with draft status, dedupe memory, and source logs.
 - Optional local approval dashboard with approve, reject, hold, regenerate description, and regenerate images.
-- Unattended GitHub Actions workflow that can publish on schedule without opening the local app.
+- Unattended GitHub Actions workflow that can be triggered by an external scheduler without opening the local app.
 - Meta Instagram Graph API publishing when credentials and public image hosting are configured.
 - Manual export fallback when Meta credentials or public asset URLs are missing.
 - Samachar Bharat branding on dashboard, descriptions, and generated slides.
@@ -120,9 +120,12 @@ are stored in `NEWSAGENT_SESSION_PATH`, which defaults to
 The repository includes `.github/workflows/publish-instagram.yml` for an
 owner-only hosted run. It creates one draft, uploads the generated slides to
 GitHub Pages so Meta can fetch public HTTPS images, then publishes that exact
-draft id through Meta as separate feed posts by default. This is the unattended
-production path: no local server, browser tab, dashboard approval, or manual
-trigger is needed after the one-time setup.
+draft id through Meta as separate feed posts by default.
+
+GitHub Support confirmed that native GitHub `schedule` events can be delayed or
+dropped under load. For unattended production, use an external scheduler that
+calls GitHub's `workflow_dispatch` API. This keeps the app on GitHub Actions but
+does not depend on GitHub's unreliable cron queue.
 
 Add these repository secrets before enabling the workflow:
 
@@ -132,7 +135,33 @@ Add these repository secrets before enabling the workflow:
 
 Enable GitHub Pages for Actions in the repository settings. Keep Actions
 enabled. The workflow can be run manually from the Actions tab for testing, and
-then runs automatically every 3 hours on IST boundaries.
+the external scheduler should trigger it every 3 hours.
+
+Create a fine-grained GitHub personal access token for this repository with:
+
+- Repository access: `GurunathBhandarkavathe/NewsAgent`
+- Repository permission: `Actions` = `Read and write`
+
+Configure any reliable external cron service to send this request every 3 hours:
+
+```bash
+curl -L -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer YOUR_GITHUB_PAT" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
+  https://api.github.com/repos/GurunathBhandarkavathe/NewsAgent/actions/workflows/publish-instagram.yml/dispatches \
+  -d '{"ref":"main"}'
+```
+
+If the service uses UTC cron, use:
+
+```text
+30 0,3,6,9,12,15,18,21 * * *
+```
+
+That corresponds to `06:00, 09:00, 12:00, 15:00, 18:00, 21:00, 00:00, 03:00`
+in IST. If the service supports `Asia/Kolkata`, schedule those IST times
+directly.
 
 Example always-on launch files are included:
 
