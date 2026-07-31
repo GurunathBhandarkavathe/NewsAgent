@@ -33,6 +33,9 @@ def render_draft_images(draft: Draft, config: Config) -> None:
         render_slide(story, output, index, total, config)
         story.slide_path = str(output)
 
+# Global
+LOGO = Image.open("assets/logo1.png").convert("RGBA")
+LOGO.thumbnail((150, 150), Image.Resampling.LANCZOS)
 
 def render_slide(story: DraftStory, output_path: Path, index: int, total: int, config: Config) -> None:
     image = Image.new("RGB", CANVAS, (246, 247, 241))
@@ -54,13 +57,20 @@ def render_slide(story: DraftStory, output_path: Path, index: int, total: int, c
             else "branded_card_no_external_news_image"
         )
 
-    brief_font = load_font(42, bold=True)
+    brief_font = load_font(60, bold=True)
     meta_font = load_font(30, bold=True)
-    small_font = load_font(24)
+    small_font = load_font(30)
     source_font = load_font(26)
 
-    draw.rounded_rectangle((42, 42, 252, 100), radius=18, fill=category_color)
-    draw.text((66, 56), f"{index}/{total}", font=meta_font, fill=(255, 255, 255))
+    # draw.rounded_rectangle((42, 42, 252, 100), radius=18, fill=category_color)
+    # draw.text((66, 56), f"{index}/{total}", font=meta_font, fill=(255, 255, 255))
+    # ---- Top Left Logo ----
+    # draw.rounded_rectangle(
+    # (30, 30, 310, 310),
+    # radius=18,
+    # fill=(250, 249, 244)
+    # )
+    image.paste(LOGO, (40, 35), LOGO)
     brand_label = config.brand_name.upper()[:18]
     brand_bbox = draw.textbbox((0, 0), brand_label, font=meta_font)
     brand_width = min(370, brand_bbox[2] - brand_bbox[0] + 52)
@@ -70,8 +80,8 @@ def render_slide(story: DraftStory, output_path: Path, index: int, total: int, c
     draw.rectangle(PANEL_BOX, fill=(250, 249, 244))
     draw.rectangle((0, 890, 1080, 902), fill=category_color)
 
-    category = story.category.replace("_", " ").upper()
-    draw.text((64, 936), category, font=meta_font, fill=category_color)
+    # category = story.category.replace("_", " ").upper()
+    # draw.text((64, 936), category, font=meta_font, fill=category_color)
 
     brief = slide_brief(story)
     wrapped = wrap_text(brief, brief_font, 930, max_lines=4)
@@ -79,6 +89,8 @@ def render_slide(story: DraftStory, output_path: Path, index: int, total: int, c
 
     draw.text((64, 1260), "", font=source_font, fill=(52, 58, 64))
     draw.text((64, 1295), "", font=small_font, fill=(92, 96, 100))
+    draw.text((64, 1295), "Read the Full Story - Description", font=small_font, fill=(92, 96, 100))
+
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     image.save(output_path, "JPEG", quality=92, optimize=True)

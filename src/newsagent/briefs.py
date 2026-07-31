@@ -10,8 +10,8 @@ def slide_brief(story: DraftStory) -> str:
     summary = clean_text(story.summary)
     title_sentence = title_to_sentence(story.title)
     if summary and len(summary) <= 150 and summary.lower() != clean_text(story.title).lower():
-        return complete_sentence(truncate_words(summary, max_words=22, max_chars=150))
-    return complete_sentence(truncate_words(title_sentence, max_words=22, max_chars=150))
+        return complete_sentence(truncate_words(summary, max_words=32, max_chars=200))
+    return complete_sentence(truncate_words(title_sentence, max_words=32, max_chars=200))
 
 
 def description_detail(story: DraftStory) -> str:
