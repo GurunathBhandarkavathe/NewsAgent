@@ -1,6 +1,9 @@
 name: Publish Instagram Posts
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
   schedule:
     - cron: "0 */3 * * *"
@@ -20,8 +23,8 @@ env:
   NEWSAGENT_DATA_DIR: data
   NEWSAGENT_ASSETS_DIR: public-assets
   NEWSAGENT_SESSION_PATH: data/session-store.json
-  DRAFT_MIN_ITEMS: "1"
-  DRAFT_MAX_ITEMS: "1"
+  DRAFT_MIN_ITEMS: "3"
+  DRAFT_MAX_ITEMS: "3"
   POST_FORMAT: separate_posts
   ARTICLE_DETAIL_ENRICHMENT: "true"
   IMAGE_POLICY: article_images
