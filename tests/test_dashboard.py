@@ -28,7 +28,7 @@ def test_dashboard_renders_index_detail_and_asset(tmp_path: Path) -> None:
     assert draft.id.encode() in index.data
     assert b"slide-01.jpg" in index.data
     assert brand.status_code == 200
-    assert b"@smachar.bh" in brand.data
+    assert b"@samachar.bharat_" in brand.data
     assert b"no news-channel images" in brand.data
     assert b"Production" in brand.data
     assert detail.status_code == 200

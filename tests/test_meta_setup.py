@@ -101,14 +101,14 @@ def test_meta_connection_check_uses_graph_without_posting(monkeypatch, tmp_path:
 
     def fake_get(url: str, params: dict, timeout: int):
         calls.append((url, params))
-        return FakeResponse({"id": "17890000000000000", "username": "smachar.bh", "media_count": 0})
+        return FakeResponse({"id": "17890000000000000", "username": "samachar.bharat_", "media_count": 0})
 
     monkeypatch.setattr("newsagent.meta.requests.get", fake_get)
 
     result = check_meta_connection(config)
 
     assert result.ok is True
-    assert result.account["username"] == "smachar.bh"
+    assert result.account["username"] == "samachar.bharat_"
     assert calls
     assert calls[0][0].startswith("https://graph.facebook.com/v26.0/")
     assert calls[0][1]["fields"] == "id,username,media_count"
@@ -125,7 +125,7 @@ def test_meta_connection_uses_instagram_host_for_igaa_tokens(monkeypatch, tmp_pa
 
     def fake_get(url: str, params: dict, timeout: int):
         calls.append(url)
-        return FakeResponse({"id": "17890000000000000", "username": "smachar.bh", "media_count": 0})
+        return FakeResponse({"id": "17890000000000000", "username": "samachar.bharat_", "media_count": 0})
 
     monkeypatch.setattr("newsagent.meta.requests.get", fake_get)
 

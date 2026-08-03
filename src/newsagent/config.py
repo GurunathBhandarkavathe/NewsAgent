@@ -95,14 +95,16 @@ def parse_rss_feeds(raw: str | None) -> dict[str, list[str]]:
 class Config:
     project_root: Path = field(default_factory=lambda: Path.cwd())
     brand_name: str = field(default_factory=lambda: os.getenv("BRAND_NAME", "Samachar Bharat"))
-    brand_handle: str = field(default_factory=lambda: _handle(os.getenv("BRAND_HANDLE", "@smachar.bh"), "@smachar.bh"))
+    brand_handle: str = field(
+        default_factory=lambda: _handle(os.getenv("BRAND_HANDLE", "@samachar.bharat_"), "@samachar.bharat_")
+    )
     brand_tagline: str = field(
-        default_factory=lambda: os.getenv("BRAND_TAGLINE", "Bharat in 5 slides. Every 3 hours.")
+        default_factory=lambda: os.getenv("BRAND_TAGLINE", "clear Bharat updates every 3 hours.")
     )
     brand_bio: str = field(
         default_factory=lambda: os.getenv(
             "BRAND_BIO",
-            "Top Bharat stories in 5 quick slides. Politics, films, sports, current affairs and world news.",
+            "Top Bharat stories every 3 hours. Politics, films, sports, current affairs and world news.",
         )
     )
     data_dir: Path = field(default_factory=lambda: Path(os.getenv("NEWSAGENT_DATA_DIR", "data")))
@@ -138,7 +140,7 @@ class Config:
 
     def __post_init__(self) -> None:
         self.brand_name = self.brand_name.strip() or "Samachar Bharat"
-        self.brand_handle = _handle(self.brand_handle, "@smachar.bh")
+        self.brand_handle = _handle(self.brand_handle, "@samachar.bharat_")
         self.brand_tagline = self.brand_tagline.strip()
         self.brand_bio = self.brand_bio.strip()
         self.meta_graph_version = self.meta_graph_version.strip().strip("/") or "v26.0"

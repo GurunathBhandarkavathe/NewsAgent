@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from .briefs import complete_sentence, story_context
 from .models import DraftStory
 from .utils import source_from_url, truncate_words
@@ -28,8 +30,8 @@ def build_caption(
     variant: int = 0,
     *,
     brand_name: str = "Samachar Bharat",
-    brand_handle: str = "@smachar.bh",
-    brand_tagline: str = "Bharat in 5 slides. Every 3 hours.",
+    brand_handle: str = "@samachar.bharat_",
+    brand_tagline: str = "clear Bharat updates every 3 hours.",
     max_chars: int = PUBLISH_CAPTION_MAX_CHARS,
 ) -> str:
     variant_index = variant % len(OPENERS)
@@ -64,8 +66,8 @@ def build_story_post_caption(
     total: int,
     *,
     brand_name: str = "Samachar Bharat",
-    brand_handle: str = "@smachar.bh",
-    brand_tagline: str = "Bharat in 5 slides. Every 3 hours.",
+    brand_handle: str = "@samachar.bharat_",
+    brand_tagline: str = "clear Bharat updates every 3 hours.",
     max_chars: int = PUBLISH_CAPTION_MAX_CHARS,
 ) -> str:
     label = story.category.replace("_", " ").title()
@@ -75,9 +77,16 @@ def build_story_post_caption(
     host = source_from_url(story.url)
     lines = [
         f"{brand_name} update {index}/{total}: {label}",
-        title,
         "",
-        f"Full brief: {detail}",
+        "What happened:",
+        f"- {title}",
+        "",
+        "Full details:",
+        *[f"- {point}" for point in detail_points(detail)],
+        "",
+        "Source and reference:",
+        f"- Courtesy: {source or host}",
+        f"- Full report: {story.url}",
         "",
         f"Follow {brand_handle} for {brand_tagline}",
         f"{brand_hashtag(brand_name)} #BharatNews #NewsUpdate",
@@ -122,14 +131,14 @@ def story_lines(
         first = f"{index}. {title} ({label})"
         detail_prefix = "Details"
     elif variant_index == 2:
-        first = f"{index}. {label} update — {title}"
+        first = f"{index}. {label} update - {title}"
         detail_prefix = "Context"
     else:
         first = f"{index}. {label}: {title}"
         detail_prefix = "Details"
     return [
         first,
-        f"{detail_prefix}: {detail}",
+        f"- {detail_prefix}: {detail}",
     ]
 
 
@@ -151,3 +160,13 @@ def fit_caption_to_instagram(caption: str, max_chars: int = PUBLISH_CAPTION_MAX_
 def brand_hashtag(brand_name: str) -> str:
     tag = "".join(part for part in brand_name.title() if part.isalnum())
     return f"#{tag or 'SamacharBharat'}"
+
+
+def detail_points(text: str, max_points: int = 6) -> list[str]:
+    detail = complete_sentence(text)
+    if not detail:
+        return []
+    points = [point.strip() for point in re.split(r"(?<=[.!?])\s+", detail) if point.strip()]
+    if len(points) <= max_points:
+        return points
+    return [*points[: max_points - 1], " ".join(points[max_points - 1 :])]

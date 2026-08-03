@@ -56,9 +56,9 @@ By default, the worker aligns future cycles to 3-hour IST boundaries.
 The app is preconfigured for:
 
 - Name: `Samachar Bharat`
-- Handle: `@smachar.bh`
-- Tagline: `Bharat in 5 slides. Every 3 hours.`
-- Bio: `Top Bharat stories in 5 quick slides. Politics, films, sports, current affairs and world news.`
+- Handle: `@samachar.bharat_`
+- Tagline: `clear Bharat updates every 3 hours.`
+- Bio: `Top Bharat stories every 3 hours. Politics, films, sports, current affairs and world news.`
 
 Open `http://127.0.0.1:8000/brand` to view the profile fields and production readiness checks. You still need to create or rename the actual Instagram account in Instagram because account creation requires your login and verification.
 

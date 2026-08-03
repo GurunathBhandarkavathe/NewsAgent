@@ -113,6 +113,27 @@ def test_extract_article_metadata_collects_article_body_context(monkeypatch) -> 
     assert "Advertisement" not in metadata["article_text"]
 
 
+def test_article_text_removes_subscription_and_photo_credit_boilerplate(monkeypatch) -> None:
+    html = """
+    <html>
+      <body>
+        <article>
+          <p>Officials said the update will affect the next phase of the policy rollout after a review meeting.</p>
+          <p>Account subscription benefits alongside Premium Stories, Editorials, Opinions and more. Unlock these with Subscription | Photo Credit: M.A. Sriram</p>
+        </article>
+      </body>
+    </html>
+    """
+    monkeypatch.setattr("newsagent.sources.requests.get", lambda *args, **kwargs: FakeHTTPResponse(html))
+
+    metadata = extract_article_metadata("https://news.example/story")
+
+    assert "policy rollout" in metadata["article_text"]
+    assert "Account subscription benefits" not in metadata["article_text"]
+    assert "Unlock these with Subscription" not in metadata["article_text"]
+    assert "Photo Credit:" not in metadata["article_text"]
+
+
 def test_article_detail_enrichment_prefers_richer_article_context(monkeypatch) -> None:
     html = """
     <html>

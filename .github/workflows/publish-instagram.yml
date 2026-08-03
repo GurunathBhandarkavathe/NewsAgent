@@ -5,8 +5,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-  schedule:
-    - cron: "0 */3 * * *"
 permissions:
   contents: read
   pages: write
@@ -18,13 +16,13 @@ concurrency:
 
 env:
   BRAND_NAME: Samachar Bharat
-  BRAND_HANDLE: "@smachar.bh"
-  BRAND_TAGLINE: Bharat in 5 slides. Every 3 hours.
+  BRAND_HANDLE: "@samachar.bharat_"
+  BRAND_TAGLINE: clear Bharat updates every 3 hours.
   NEWSAGENT_DATA_DIR: data
   NEWSAGENT_ASSETS_DIR: public-assets
   NEWSAGENT_SESSION_PATH: data/session-store.json
-  DRAFT_MIN_ITEMS: "3"
-  DRAFT_MAX_ITEMS: "3"
+  DRAFT_MIN_ITEMS: "10"
+  DRAFT_MAX_ITEMS: "10"
   POST_FORMAT: separate_posts
   ARTICLE_DETAIL_ENRICHMENT: "true"
   IMAGE_POLICY: article_images

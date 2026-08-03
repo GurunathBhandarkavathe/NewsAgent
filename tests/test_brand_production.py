@@ -11,14 +11,14 @@ from helpers import make_config
 
 
 def test_default_brand_config_is_samachar_bharat(tmp_path: Path) -> None:
-    config = make_config(tmp_path, brand_handle="smachar.bh")
+    config = make_config(tmp_path, brand_handle="samachar.bharat_")
     profile = profile_fields(config)
 
     assert config.brand_name == "Samachar Bharat"
-    assert config.brand_handle == "@smachar.bh"
+    assert config.brand_handle == "@samachar.bharat_"
     assert profile["name"] == "Samachar Bharat"
-    assert profile["handle"] == "@smachar.bh"
-    assert "Bharat in 5 slides" in profile["tagline"]
+    assert profile["handle"] == "@samachar.bharat_"
+    assert "clear Bharat updates every 3 hours" in profile["tagline"]
 
 
 def test_caption_uses_samachar_bharat_brand(tmp_path: Path) -> None:
@@ -28,7 +28,7 @@ def test_caption_uses_samachar_bharat_brand(tmp_path: Path) -> None:
     assert draft is not None
 
     assert draft.caption.startswith("Samachar Bharat trend watch:")
-    assert "Follow @smachar.bh" in draft.caption
+    assert "Follow @samachar.bharat_" in draft.caption
     assert "#SamacharBharat" in draft.caption
 
 

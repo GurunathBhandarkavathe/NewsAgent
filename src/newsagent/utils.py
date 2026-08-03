@@ -21,6 +21,15 @@ TRACKING_PARAMS = {
     "mc_eid",
 }
 
+NEWS_TEXT_BOILERPLATE_PATTERNS = (
+    re.compile(
+        r"\bAccount subscription benefits alongside Premium Stories, Editorials, Opinions and more\.?\s*"
+        r"Unlock these with Subscription\b",
+        re.I,
+    ),
+    re.compile(r"\s*\|?\s*Photo Credit:\s*[^|]+$", re.I),
+)
+
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -65,6 +74,9 @@ def clean_text(value: object) -> str:
     text = unescape(str(value or ""))
     text = re.sub(r"<[^>]+>", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
+    for pattern in NEWS_TEXT_BOILERPLATE_PATTERNS:
+        text = pattern.sub(" ", text)
+    text = re.sub(r"\s+", " ", text).strip(" |")
     return text
 
 

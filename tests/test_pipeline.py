@@ -6,7 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 from newsagent.briefs import description_detail, slide_brief
-from newsagent.caption import PUBLISH_CAPTION_MAX_CHARS, build_caption, build_story_post_caption
+from newsagent.caption import PUBLISH_CAPTION_MAX_CHARS, build_caption, build_story_post_caption, detail_points
 from newsagent.db import Database
 from newsagent.models import DraftStory, NewsItem
 from newsagent.pipeline import regenerate_draft_with_fresh_images, run_cycle
@@ -45,7 +45,7 @@ def test_caption_has_expected_lines_sources_and_links(tmp_path: Path) -> None:
 
     lines = [line for line in draft.caption.splitlines() if line.strip()]
     assert 20 <= len(lines) <= 28
-    assert "Details:" in draft.caption
+    assert "- Details:" in draft.caption
     assert "Mock summary for" in draft.caption
     assert "Source/courtesy:" not in draft.caption
     assert "Sources/courtesy:" not in draft.caption
@@ -101,11 +101,55 @@ def test_separate_post_caption_has_detailed_single_story_description() -> None:
     caption = build_story_post_caption(story, 1, 5)
 
     assert caption.startswith("Samachar Bharat update 1/5: Politics")
-    assert "Full brief:" in caption
+    assert "Full details:" in caption
+    assert "- Lawmakers discussed" in caption
     assert "citizen safeguards" in caption
+    assert "- Courtesy: Example News" in caption
+    assert "- Full report: https://example.com/politics/digital-governance-bill" in caption
     assert "Source/courtesy:" not in caption
-    assert "example.com" not in caption
     assert len(caption) <= PUBLISH_CAPTION_MAX_CHARS
+
+
+def test_caption_detail_points_split_existing_text_without_dropping_information() -> None:
+    detail = (
+        "Officials said the move follows a review meeting. "
+        "Departments will publish a timeline next week. "
+        "The final notification is expected after public feedback."
+    )
+
+    points = detail_points(detail)
+
+    assert points == [
+        "Officials said the move follows a review meeting.",
+        "Departments will publish a timeline next week.",
+        "The final notification is expected after public feedback.",
+    ]
+
+
+def test_caption_removes_known_subscription_and_photo_credit_boilerplate() -> None:
+    story = DraftStory(
+        key="story",
+        title="India policy update issued after review meeting",
+        url="https://example.com/politics/policy-update",
+        source="Example News",
+        category="politics",
+        published_at=None,
+        summary=(
+            "Officials said the update will affect the next phase of the policy rollout. "
+            "Account subscription benefits alongside Premium Stories, Editorials, Opinions and more. "
+            "Unlock these with Subscription | Photo Credit: M.A. Sriram"
+        ),
+        image_url="",
+        source_count=1,
+        score=1.0,
+    )
+
+    caption = build_story_post_caption(story, 1, 5)
+
+    assert "Officials said the update" in caption
+    assert "Account subscription benefits" not in caption
+    assert "Unlock these with Subscription" not in caption
+    assert "Photo Credit:" not in caption
 
 
 def test_real_cycle_enriches_selected_story_descriptions(monkeypatch, tmp_path: Path) -> None:
