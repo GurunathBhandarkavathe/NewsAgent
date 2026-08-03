@@ -18,7 +18,7 @@ def test_default_brand_config_is_samachar_bharat(tmp_path: Path) -> None:
     assert config.brand_handle == "@samachar.bharat_"
     assert profile["name"] == "Samachar Bharat"
     assert profile["handle"] == "@samachar.bharat_"
-    assert "clear Bharat updates every 3 hours" in profile["tagline"]
+    assert "Samachar Bharat updates every 3 hours" in profile["tagline"]
 
 
 def test_caption_uses_samachar_bharat_brand(tmp_path: Path) -> None:

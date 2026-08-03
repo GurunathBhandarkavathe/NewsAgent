@@ -57,7 +57,7 @@ The app is preconfigured for:
 
 - Name: `Samachar Bharat`
 - Handle: `@samachar.bharat_`
-- Tagline: `clear Bharat updates every 3 hours.`
+- Tagline: `Samachar Bharat updates every 3 hours.`
 - Bio: `Top Bharat stories every 3 hours. Politics, films, sports, current affairs and world news.`
 
 Open `http://127.0.0.1:8000/brand` to view the profile fields and production readiness checks. You still need to create or rename the actual Instagram account in Instagram because account creation requires your login and verification.

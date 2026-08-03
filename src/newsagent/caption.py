@@ -31,7 +31,7 @@ def build_caption(
     *,
     brand_name: str = "Samachar Bharat",
     brand_handle: str = "@samachar.bharat_",
-    brand_tagline: str = "clear Bharat updates every 3 hours.",
+    brand_tagline: str = "Samachar Bharat updates every 3 hours.",
     max_chars: int = PUBLISH_CAPTION_MAX_CHARS,
 ) -> str:
     variant_index = variant % len(OPENERS)
@@ -67,7 +67,7 @@ def build_story_post_caption(
     *,
     brand_name: str = "Samachar Bharat",
     brand_handle: str = "@samachar.bharat_",
-    brand_tagline: str = "clear Bharat updates every 3 hours.",
+    brand_tagline: str = "Samachar Bharat updates every 3 hours.",
     max_chars: int = PUBLISH_CAPTION_MAX_CHARS,
 ) -> str:
     label = story.category.replace("_", " ").title()

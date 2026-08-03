@@ -99,7 +99,7 @@ class Config:
         default_factory=lambda: _handle(os.getenv("BRAND_HANDLE", "@samachar.bharat_"), "@samachar.bharat_")
     )
     brand_tagline: str = field(
-        default_factory=lambda: os.getenv("BRAND_TAGLINE", "clear Bharat updates every 3 hours.")
+        default_factory=lambda: os.getenv("BRAND_TAGLINE", "Samachar Bharat updates every 3 hours.")
     )
     brand_bio: str = field(
         default_factory=lambda: os.getenv(
